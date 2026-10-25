@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using ScottPlot;
+using ThermoForge.Core.Models;
 using ThermoForge.UI.ViewModels;
 
 namespace ThermoForge.UI.Views;
@@ -26,7 +27,7 @@ public partial class HardwareView : UserControl
             _viewModel.SnapshotApplied += OnSnapshotApplied;
     }
 
-    private void OnSnapshotApplied(object? sender, EventArgs e) => RenderChart();
+    private void OnSnapshotApplied(object? sender, SensorSnapshot e) => RenderChart();
 
     private void StyleChart()
     {

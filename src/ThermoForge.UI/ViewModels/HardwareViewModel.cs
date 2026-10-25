@@ -33,7 +33,11 @@ public sealed partial class HardwareViewModel : ObservableObject, IAsyncDisposab
     private string _statusText = "Starting sensors…";
 
     /// <summary>Raised on the UI thread after a snapshot has been applied, so the view can redraw the chart.</summary>
-    public event EventHandler? SnapshotApplied;
+    public event EventHandler<SensorSnapshot>? SnapshotApplied;
+
+    /// <summary>Worst status among the CPU, GPU and drive temperature cards.</summary>
+    public TemperatureStatus WorstStatus =>
+        new[] { CpuTemperature.Status, GpuTemperature.Status, StorageTemperature.Status }.Max();
 
     public async Task StartAsync()
     {
@@ -99,6 +103,6 @@ public sealed partial class HardwareViewModel : ObservableObject, IAsyncDisposab
             ? $"Updated {snapshot.Timestamp:T} · {snapshot.Readings.Count} sensors"
             : $"Updated {snapshot.Timestamp:T} · {snapshot.Readings.Count} sensors · {string.Join("; ", errors)}";
 
-        SnapshotApplied?.Invoke(this, EventArgs.Empty);
+        SnapshotApplied?.Invoke(this, snapshot);
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
@@ -16,12 +17,14 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
 
     private readonly Dictionary<(int Pid, DateTime? Started), ProcessRowViewModel> _rows = new();
+    private readonly TrustStore _trust;
     private SynchronizationContext? _uiContext;
     private ProcessMonitor? _monitor;
     private PollingLoop<ProcessSnapshot>? _loop;
 
-    public ProcessesViewModel()
+    public ProcessesViewModel(TrustStore trust)
     {
+        _trust = trust;
         ProcessesView = new ListCollectionView(Processes)
         {
             Filter = Matches,
@@ -29,7 +32,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
             IsLiveFiltering = true,
         };
         // Most suspicious first, then busiest. Live sorting re-sorts on these properties as they change.
-        ProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessRowViewModel.Severity), ListSortDirection.Descending));
+        ProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessRowViewModel.Risk), ListSortDirection.Descending));
         ProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessRowViewModel.CpuPercent), ListSortDirection.Descending));
         ProcessesView.LiveFilteringProperties.Add(nameof(ProcessRowViewModel.Severity));
     }
@@ -45,7 +48,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EndProcessCommand), nameof(OpenFileLocationCommand),
-        nameof(CopyPathCommand), nameof(SearchOnlineCommand))]
+        nameof(CopyPathCommand), nameof(SearchOnlineCommand), nameof(ToggleTrustCommand))]
     private ProcessRowViewModel? _selectedProcess;
 
     [ObservableProperty]
@@ -55,12 +58,31 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
     [ObservableProperty]
     private int _alertCount;
 
+    /// <summary>Raised on the UI thread after each snapshot has been applied to the list.</summary>
+    public event EventHandler<ProcessSnapshot>? SnapshotApplied;
+
+    public bool HasHighRisk => Processes.Any(r => r.Severity == FindingSeverity.High);
+
+    /// <summary>Selects a process by PID (e.g. from a notification), clearing filters that would hide it.</summary>
+    public void Select(int pid)
+    {
+        var row = Processes.FirstOrDefault(r => r.Pid == pid);
+        if (row is null)
+            return;
+        if (!Matches(row))
+        {
+            SearchText = "";
+            ShowFlaggedOnly = false;
+        }
+        SelectedProcess = row;
+    }
+
     public void Start()
     {
         _uiContext = SynchronizationContext.Current
             ?? throw new InvalidOperationException("Start must be called from the UI thread.");
 
-        _monitor = new ProcessMonitor(ProcessAnalyzer.ForCurrentSystem());
+        _monitor = new ProcessMonitor(ProcessAnalyzer.ForCurrentSystem(), _trust);
         _loop = new PollingLoop<ProcessSnapshot>(_monitor.Poll, PollInterval);
         _loop.Polled += (_, snapshot) => _uiContext.Post(_ => Apply(snapshot), null);
         _loop.Faulted += (_, ex) => _uiContext.Post(_ => StatusText = $"Process scan failed: {ex.Message}", null);
@@ -128,6 +150,33 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
 
     private bool HasSelection() => SelectedProcess is not null;
 
+    [RelayCommand(CanExecute = nameof(HasPath))]
+    private void ToggleTrust()
+    {
+        var row = SelectedProcess!;
+        if (row.IsTrusted)
+        {
+            _trust.Remove(row.Path!);
+            return;
+        }
+
+        var answer = MessageBox.Show(
+            $"Trust {row.Name}?\n\n{row.Path}\n\nIts findings will no longer count toward its risk score or raise alerts. "
+            + "If the file is ever replaced or modified, ThermoForge will check it again.",
+            "Trust program", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+        if (answer != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            _trust.Trust(row.Path!, row.Name, string.IsNullOrEmpty(row.Publisher) ? null : row.Publisher);
+        }
+        catch (IOException ex)
+        {
+            MessageBox.Show(ex.Message, "Could not trust program", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private bool Matches(object item)
     {
         var row = (ProcessRowViewModel)item;
@@ -174,5 +223,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
         var hidden = Processes.Count(r => r.Path is null);
         StatusText = $"Updated {snapshot.Timestamp:T} · {Processes.Count} processes · {flagged} flagged"
             + (hidden > 0 ? $" · {hidden} hidden by Windows" : "");
+
+        SnapshotApplied?.Invoke(this, snapshot);
     }
 }

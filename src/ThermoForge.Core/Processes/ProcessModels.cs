@@ -39,16 +39,22 @@ public enum FindingSeverity
 /// <summary>One suspicious trait of a process, with a plain-language explanation.</summary>
 public sealed record ProcessFinding(FindingSeverity Severity, string Title, string Detail);
 
+/// <param name="GpuPercent">Busiest GPU engine used by the process, like Task Manager's GPU column.</param>
+/// <param name="IsTrusted">The user marked this exact file as known-good; its findings are shown but not scored.</param>
 public sealed record ProcessInfo(
     RawProcess Process,
     RawProcess? Parent,
     double CpuPercent,
+    double GpuPercent,
     long WorkingSetBytes,
     FileMetadata? File,
-    IReadOnlyList<ProcessFinding> Findings)
+    IReadOnlyList<ProcessFinding> Findings,
+    bool IsTrusted = false)
 {
-    public FindingSeverity Severity =>
-        Findings.Count == 0 ? FindingSeverity.None : Findings.Max(f => f.Severity);
+    /// <summary>0–100; see <see cref="RiskScore"/>.</summary>
+    public int Risk => IsTrusted ? 0 : RiskScore.From(Findings);
+
+    public FindingSeverity Severity => RiskScore.Level(Risk);
 }
 
 public sealed record ProcessSnapshot(DateTime Timestamp, IReadOnlyList<ProcessInfo> Processes);

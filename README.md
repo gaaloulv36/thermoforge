@@ -22,9 +22,20 @@ folders, or script-based attacks.
 - Every running process, refreshed every 3 s, with CPU %, memory, publisher and parent
 - Digital signature check (embedded, Windows catalog and MSIX packages)
 - Heuristics for malware-like behaviour (see [Process checks](#process-checks))
+- GPU use per process (like Task Manager)
+- **Risk score 0–100** per process: several weak signals add up to a strong one
+- **Crypto-miner detection**: flags programs that keep the CPU or GPU busy while you're away
+- **Trusted programs**: silence a program you know; trust breaks if the file ever changes
 - Red badge on the tab with the number of Medium / High findings
 - Search, "only flagged" filter, open file location, copy path, search online, end process
   (critical Windows processes are protected)
+
+**Alerts & tray**
+- Pop-up notifications when a process becomes risky or a CPU/GPU/drive stays too hot
+  (no repeats: once per risk level, and at most every 15 min per sensor)
+- Alerts tab with history, notification settings, pause for 1 hour, and the trusted list
+- Tray icon that turns amber (warning) or red (alert), with a live tooltip;
+  closing the window keeps ThermoForge running in the tray (right-click › Exit to quit)
 
 ## Requirements
 
@@ -48,7 +59,8 @@ For full coverage:
 2. **Install the PawnIO driver.** LibreHardwareMonitor needs it for CPU temperatures:
    `winget install namazso.PawnIO` (or https://pawnio.eu/).
 
-Crash details are written to `%LOCALAPPDATA%\ThermoForge\crash.log`.
+Data lives in `%LOCALAPPDATA%\ThermoForge\`: `settings.json` (notification settings),
+`trusted.json` (trusted programs, with each file's SHA-256) and `crash.log`.
 
 ## Test
 
@@ -79,6 +91,10 @@ Each process is checked every 3 s. Findings are hints, not verdicts: every rule 
 | Runs from a suspicious folder (signed: one level lower) | Medium |
 | Hidden-window PowerShell, Base64 decoding, browser starting a script host | Medium |
 | Unsigned program in a normal location; execution-policy bypass | Low |
+| Keeps CPU ≥ 25 % or GPU ≥ 40 % busy for 2+ min while you're away (2+ min idle) | High if unsigned, Medium if unknown, Low if signed |
+
+**Risk score:** High = 60, Medium = 30, Low = 10 points, added up and capped at 100.
+60+ is High risk, 30+ is Medium, anything above 0 is Low. Trusted programs score 0.
 
 Signatures are verified with WinVerifyTrust, including Windows catalog signatures (most System32
 binaries) and MSIX packages. Revocation is not checked, so no network access is needed.
@@ -87,7 +103,7 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 
 1. ~~Live temperature dashboard~~ (done)
 2. ~~Process list with signature/path checks~~ (done)
-3. Risk engine, alerts, tray icon
+3. ~~Risk engine, alerts, tray icon~~ (done)
 4. Startup/persistence scanner
 5. Network monitor
 6. VirusTotal / Defender integration, reports

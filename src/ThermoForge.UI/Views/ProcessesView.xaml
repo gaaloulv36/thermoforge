@@ -16,10 +16,12 @@
                 <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                            Visibility="{Binding Description.Length, Converter={StaticResource ToVisibility}}" />
                 <TextBlock Text="{Binding SignatureText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RiskText}" Margin="0,4,0,0" TextWrapping="Wrap" FontWeight="SemiBold"
+                           Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
 
                 <TextBlock Text="FINDINGS" Style="{StaticResource SectionLabel}" />
                 <TextBlock Text="No suspicious traits found." Style="{StaticResource SecondaryText}"
-                           Visibility="{Binding IsFlagged, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                           Visibility="{Binding HasFindings, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
                 <ItemsControl ItemsSource="{Binding Findings}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -66,8 +68,10 @@
                     <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ParentText}" TextWrapping="Wrap" />
                     <TextBlock Grid.Row="3" Text="Started" Style="{StaticResource SecondaryText}" />
                     <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding StartedText}" />
-                    <TextBlock Grid.Row="4" Text="CPU" Style="{StaticResource SecondaryText}" />
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CpuText}" />
+                    <TextBlock Grid.Row="4" Text="CPU / GPU" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="4" Grid.Column="1">
+                        <Run Text="{Binding CpuText, Mode=OneWay}" /><Run Text=" · GPU " /><Run Text="{Binding GpuPercent, Mode=OneWay, StringFormat={}{0:F0} %}" />
+                    </TextBlock>
                     <TextBlock Grid.Row="5" Text="Memory" Style="{StaticResource SecondaryText}" />
                     <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding MemoryText}" />
                 </Grid>
@@ -106,11 +110,11 @@
                 <DataGrid Style="{StaticResource DarkDataGrid}" IsReadOnly="True"
                           ItemsSource="{Binding ProcessesView}" SelectedItem="{Binding SelectedProcess}">
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Risk" Width="90" SortMemberPath="Severity">
+                        <DataGridTemplateColumn Header="Risk" Width="110" SortMemberPath="Risk">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal"
-                                                Visibility="{Binding IsFlagged, Converter={StaticResource ToVisibility}}">
+                                                Visibility="{Binding SeverityText.Length, Converter={StaticResource ToVisibility}}">
                                         <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0"
                                                  Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
                                         <TextBlock Text="{Binding SeverityText}"
@@ -122,6 +126,7 @@
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.4*" />
                         <DataGridTextColumn Header="PID" Binding="{Binding Pid}" Width="70" />
                         <DataGridTextColumn Header="CPU" Binding="{Binding CpuText}" SortMemberPath="CpuPercent" Width="75" />
+                        <DataGridTextColumn Header="GPU" Binding="{Binding GpuText}" SortMemberPath="GpuPercent" Width="65" />
                         <DataGridTextColumn Header="Memory" Binding="{Binding MemoryText}" SortMemberPath="WorkingSetBytes" Width="90" />
                         <DataGridTextColumn Header="Publisher" Binding="{Binding Publisher}" Width="1.4*" />
                         <DataGridTextColumn Header="Findings" Binding="{Binding FindingsSummary}" Width="2*" />
@@ -139,6 +144,10 @@
                                 Command="{Binding CopyPathCommand}" />
                         <Button Content="Search online" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
                                 Command="{Binding SearchOnlineCommand}" />
+                        <Button Content="{Binding SelectedProcess.TrustButtonText, FallbackValue=Trust this program}"
+                                Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding ToggleTrustCommand}"
+                                ToolTip="Mark this exact file as known-good so it stops raising alerts" />
                         <Button Content="End process" Style="{StaticResource DangerButton}" Margin="0,0,8,8"
                                 Command="{Binding EndProcessCommand}" />
                     </WrapPanel>

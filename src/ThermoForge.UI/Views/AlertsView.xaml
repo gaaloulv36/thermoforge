@@ -1,0 +1,113 @@
+<UserControl x:Class="ThermoForge.UI.Views.AlertsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ThermoForge.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:AlertsViewModel}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="14" />
+            <ColumnDefinition Width="400" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Alert history -->
+        <Border Grid.Column="0" Style="{StaticResource CardBorder}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Content="Pause for 1 hour" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding TogglePauseCommand}"
+                                Visibility="{Binding IsPaused, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                        <Button Content="Resume" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding TogglePauseCommand}"
+                                Visibility="{Binding IsPaused, Converter={StaticResource ToVisibility}}" />
+                        <Button Content="Clear" Style="{StaticResource ActionButton}" Command="{Binding ClearCommand}" />
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Alert history" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding PauseText}" Style="{StaticResource SecondaryText}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <Grid>
+                    <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Visibility="{Binding Alerts.Count, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}"
+                               Text="No alerts yet. You'll be notified when a process becomes risky (Medium or High) or a component stays too hot." />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Alerts}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderThickness="3,0,0,0" Padding="12,6,0,6" Margin="0,0,0,10"
+                                            BorderBrush="{Binding Severity, Converter={StaticResource SeverityToBrush}}">
+                                        <StackPanel>
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource SecondaryText}"
+                                                           Text="{Binding Time, StringFormat={}{0:g}}" />
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                           Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}"
+                                                       TextWrapping="Wrap" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </DockPanel>
+        </Border>
+
+        <!-- Settings and trusted programs -->
+        <DockPanel Grid.Column="2">
+            <Border DockPanel.Dock="Top" Style="{StaticResource CardBorder}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Notifications" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <CheckBox Content="Risky processes (Medium and High)" IsChecked="{Binding NotifyProcesses}" Margin="0,0,0,8" />
+                    <CheckBox Content="Components staying too hot" IsChecked="{Binding NotifyTemperature}" Margin="0,0,0,8" />
+                    <CheckBox Content="Keep running in the tray when I close the window" IsChecked="{Binding CloseToTray}" />
+                    <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,10,0,0"
+                               Text="Alerts are always recorded here. These settings only control pop-ups." />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorder}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <TextBlock Text="Trusted programs" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                   Text="Their findings don't count. If a file changes, it is checked again." />
+                    </StackPanel>
+                    <Grid>
+                        <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                   Visibility="{Binding TrustedPrograms.Count, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}"
+                                   Text="None yet. Select a process on the Processes tab and choose &quot;Trust this program&quot;." />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding TrustedPrograms}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,0,0,10">
+                                            <Button DockPanel.Dock="Right" Content="Remove" Style="{StaticResource ActionButton}"
+                                                    VerticalAlignment="Center" Margin="8,0,0,0"
+                                                    Command="{Binding DataContext.RemoveTrustCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" />
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Path}" Style="{StaticResource SecondaryText}"
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </DockPanel>
+    </Grid>
+</UserControl>

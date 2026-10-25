@@ -25,6 +25,9 @@ public sealed partial class ProcessRowViewModel : ObservableObject
     private double _cpuPercent;
 
     [ObservableProperty]
+    private double _gpuPercent;
+
+    [ObservableProperty]
     private long _workingSetBytes;
 
     [ObservableProperty]
@@ -45,7 +48,16 @@ public sealed partial class ProcessRowViewModel : ObservableObject
     [ObservableProperty]
     private FindingSeverity _severity;
 
+    /// <summary>0–100 combined risk; 0 when trusted.</summary>
+    [ObservableProperty]
+    private int _risk;
+
+    [ObservableProperty]
+    private bool _isTrusted;
+
     public string CpuText => CpuPercent.ToString("F1", CultureInfo.CurrentCulture) + " %";
+
+    public string GpuText => GpuPercent < 0.5 ? "" : GpuPercent.ToString("F0", CultureInfo.CurrentCulture) + " %";
 
     public string MemoryText => WorkingSetBytes >= 1L << 30
         ? (WorkingSetBytes / (double)(1L << 30)).ToString("F2", CultureInfo.CurrentCulture) + " GB"
@@ -53,7 +65,16 @@ public sealed partial class ProcessRowViewModel : ObservableObject
 
     public bool IsFlagged => Severity > FindingSeverity.None;
 
-    public string SeverityText => Severity == FindingSeverity.None ? "" : Severity.ToString();
+    /// <summary>Has findings, whether or not they count (trusted programs keep theirs for reference).</summary>
+    public bool HasFindings => Findings.Count > 0;
+
+    public string SeverityText => IsTrusted ? "Trusted" : Severity == FindingSeverity.None ? "" : $"{Severity} · {Risk}";
+
+    public string RiskText => IsTrusted
+        ? "Trusted by you: findings are shown for reference but don't count."
+        : Risk == 0 ? "No risk found" : $"Risk score {Risk}/100 ({Severity})";
+
+    public string TrustButtonText => IsTrusted ? "Remove trust" : "Trust this program";
 
     public string FindingsSummary => Findings.Count switch
     {
@@ -65,6 +86,7 @@ public sealed partial class ProcessRowViewModel : ObservableObject
     public void Update(ProcessInfo info)
     {
         CpuPercent = info.CpuPercent;
+        GpuPercent = info.GpuPercent;
         WorkingSetBytes = info.WorkingSetBytes;
         ParentText = info.Parent is { } parent
             ? $"{parent.Name} (PID {parent.Pid})"
@@ -75,22 +97,42 @@ public sealed partial class ProcessRowViewModel : ObservableObject
 
         // Findings rarely change; avoid churning the details pane every poll.
         if (!Findings.SequenceEqual(info.Findings))
-        {
             Findings = info.Findings;
-            Severity = info.Severity;
-        }
+        Risk = info.Risk;
+        Severity = info.Severity;
+        IsTrusted = info.IsTrusted;
     }
 
     partial void OnCpuPercentChanged(double value) => OnPropertyChanged(nameof(CpuText));
 
+    partial void OnGpuPercentChanged(double value) => OnPropertyChanged(nameof(GpuText));
+
     partial void OnWorkingSetBytesChanged(long value) => OnPropertyChanged(nameof(MemoryText));
 
-    partial void OnFindingsChanged(IReadOnlyList<ProcessFinding> value) => OnPropertyChanged(nameof(FindingsSummary));
+    partial void OnFindingsChanged(IReadOnlyList<ProcessFinding> value)
+    {
+        OnPropertyChanged(nameof(FindingsSummary));
+        OnPropertyChanged(nameof(HasFindings));
+    }
 
     partial void OnSeverityChanged(FindingSeverity value)
     {
         OnPropertyChanged(nameof(IsFlagged));
+        OnRiskTextsChanged();
+    }
+
+    partial void OnRiskChanged(int value) => OnRiskTextsChanged();
+
+    partial void OnIsTrustedChanged(bool value)
+    {
+        OnRiskTextsChanged();
+        OnPropertyChanged(nameof(TrustButtonText));
+    }
+
+    private void OnRiskTextsChanged()
+    {
         OnPropertyChanged(nameof(SeverityText));
+        OnPropertyChanged(nameof(RiskText));
     }
 
     private static string DescribePublisher(FileMetadata? file) => file?.Signature.Status switch

@@ -57,7 +57,7 @@
             </Border>
         </StackPanel>
 
-        <TabControl Grid.Row="2" Margin="0,6,0,0">
+        <TabControl Grid.Row="2" Margin="0,6,0,0" SelectedIndex="{Binding SelectedTab}">
             <TabItem Header="Hardware">
                 <views:HardwareView DataContext="{Binding Hardware}" />
             </TabItem>
@@ -75,6 +75,9 @@
                     </StackPanel>
                 </TabItem.Header>
                 <views:ProcessesView DataContext="{Binding Processes}" />
+            </TabItem>
+            <TabItem Header="Alerts">
+                <views:AlertsView DataContext="{Binding Alerts}" />
             </TabItem>
         </TabControl>
     </Grid>
