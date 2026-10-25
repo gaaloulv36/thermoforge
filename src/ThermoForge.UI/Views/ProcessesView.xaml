@@ -1,0 +1,157 @@
+<UserControl x:Class="ThermoForge.UI.Views.ProcessesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ThermoForge.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:ProcessesViewModel}">
+
+    <UserControl.Resources>
+        <!-- Details pane for the selected process. -->
+        <DataTemplate DataType="{x:Type vm:ProcessRowViewModel}">
+            <StackPanel>
+                <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                           Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                           Visibility="{Binding Description.Length, Converter={StaticResource ToVisibility}}" />
+                <TextBlock Text="{Binding SignatureText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Text="FINDINGS" Style="{StaticResource SectionLabel}" />
+                <TextBlock Text="No suspicious traits found." Style="{StaticResource SecondaryText}"
+                           Visibility="{Binding IsFlagged, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                <ItemsControl ItemsSource="{Binding Findings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="3,0,0,0" Padding="10,4,0,4" Margin="0,0,0,8"
+                                    BorderBrush="{Binding Severity, Converter={StaticResource SeverityToBrush}}">
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap"
+                                               Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}">
+                                        <Run Text="{Binding Severity, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Title, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="FILE" Style="{StaticResource SectionLabel}" />
+                <TextBox Text="{Binding PathText, Mode=OneWay}" Style="{StaticResource ReadOnlyText}" />
+
+                <TextBlock Text="COMMAND LINE" Style="{StaticResource SectionLabel}" />
+                <TextBox Text="{Binding CommandLineText, Mode=OneWay}" Style="{StaticResource ReadOnlyText}" MaxHeight="120"
+                         VerticalScrollBarVisibility="Auto" />
+
+                <TextBlock Text="DETAILS" Style="{StaticResource SectionLabel}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="PID" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Pid}" />
+                    <TextBlock Grid.Row="1" Text="Publisher" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Publisher}" TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="2" Text="Parent" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ParentText}" TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="3" Text="Started" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding StartedText}" />
+                    <TextBlock Grid.Row="4" Text="CPU" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CpuText}" />
+                    <TextBlock Grid.Row="5" Text="Memory" Style="{StaticResource SecondaryText}" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding MemoryText}" />
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" VerticalAlignment="Center"
+                       Style="{StaticResource SecondaryText}" />
+            <Grid Width="320">
+                <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="Search name, PID, path or publisher…" Margin="10,0,0,0" VerticalAlignment="Center"
+                           IsHitTestVisible="False" Style="{StaticResource SecondaryText}"
+                           Visibility="{Binding Text.Length, ElementName=SearchBox, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+            </Grid>
+            <CheckBox Content="Only flagged" IsChecked="{Binding ShowFlaggedOnly}" Margin="16,0,0,0" />
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Process list -->
+            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Padding="0">
+                <DataGrid Style="{StaticResource DarkDataGrid}" IsReadOnly="True"
+                          ItemsSource="{Binding ProcessesView}" SelectedItem="{Binding SelectedProcess}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Risk" Width="90" SortMemberPath="Severity">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding IsFlagged, Converter={StaticResource ToVisibility}}">
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                 Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                                        <TextBlock Text="{Binding SeverityText}"
+                                                   Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="1.4*" />
+                        <DataGridTextColumn Header="PID" Binding="{Binding Pid}" Width="70" />
+                        <DataGridTextColumn Header="CPU" Binding="{Binding CpuText}" SortMemberPath="CpuPercent" Width="75" />
+                        <DataGridTextColumn Header="Memory" Binding="{Binding MemoryText}" SortMemberPath="WorkingSetBytes" Width="90" />
+                        <DataGridTextColumn Header="Publisher" Binding="{Binding Publisher}" Width="1.4*" />
+                        <DataGridTextColumn Header="Findings" Binding="{Binding FindingsSummary}" Width="2*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Details -->
+            <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                        <Button Content="Open file location" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding OpenFileLocationCommand}" />
+                        <Button Content="Copy path" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding CopyPathCommand}" />
+                        <Button Content="Search online" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding SearchOnlineCommand}" />
+                        <Button Content="End process" Style="{StaticResource DangerButton}" Margin="0,0,8,8"
+                                Command="{Binding EndProcessCommand}" />
+                    </WrapPanel>
+                    <Grid>
+                        <TextBlock Text="Select a process to see why it was flagged, who signed it and where it runs from."
+                                   Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                   Visibility="{Binding SelectedProcess, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ContentControl Content="{Binding SelectedProcess}" />
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

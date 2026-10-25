@@ -1,6 +1,11 @@
-# Temp Monitor
+<p align="center"><img src="docs/logo.png" width="128" alt="ThermoForge logo"></p>
 
-A Windows desktop app (C# / .NET 10 / WPF) that shows live hardware temperatures and load,
+<h1 align="center">ThermoForge</h1>
+<p align="center"><b>PC temperatures &amp; suspicious-process monitor for Windows</b><br>by <b>Forge Studio</b></p>
+
+---
+
+ThermoForge is a Windows desktop app (C# / .NET 10 / WPF) that shows live hardware temperatures and load,
 and flags suspicious background processes such as malware look-alikes, unsigned programs in odd
 folders, or script-based attacks.
 
@@ -30,9 +35,9 @@ folders, or script-based attacks.
 ## Run
 
 ```powershell
-git clone https://github.com/gaaloulv36/temp-monitor.git
-cd temp-monitor
-dotnet run --project src/TempMonitor.UI
+git clone https://github.com/gaaloulv36/thermoforge.git
+cd thermoforge
+dotnet run --project src/ThermoForge.UI
 ```
 
 For full coverage:
@@ -43,21 +48,21 @@ For full coverage:
 2. **Install the PawnIO driver.** LibreHardwareMonitor needs it for CPU temperatures:
    `winget install namazso.PawnIO` (or https://pawnio.eu/).
 
-Crash details are written to `%LOCALAPPDATA%\TempMonitor\crash.log`.
+Crash details are written to `%LOCALAPPDATA%\ThermoForge\crash.log`.
 
 ## Test
 
 ```powershell
-dotnet test TempMonitor.slnx
+dotnet test ThermoForge.slnx
 ```
 
 ## Layout
 
 | Project | Purpose |
 |---|---|
-| `src/TempMonitor.Core` | Sensor providers (LibreHardwareMonitor, ACPI thermal zones), process monitor (WMI), Authenticode verification, heuristics |
-| `src/TempMonitor.UI` | WPF dashboard (MVVM via CommunityToolkit.Mvvm, charts via ScottPlot) |
-| `tests/TempMonitor.Tests` | xUnit tests for Core logic |
+| `src/ThermoForge.Core` | Sensor providers (LibreHardwareMonitor, ACPI thermal zones), process monitor (WMI), Authenticode verification, heuristics |
+| `src/ThermoForge.UI` | WPF dashboard (MVVM via CommunityToolkit.Mvvm, charts via ScottPlot) |
+| `tests/ThermoForge.Tests` | xUnit tests for Core logic |
 
 ## Process checks
 
@@ -87,3 +92,9 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 5. Network monitor
 6. VirusTotal / Defender integration, reports
 7. Background Windows Service + installer
+
+## About Forge Studio
+
+ThermoForge is part of the **Forge Studio** family of desktop tools
+(ThermoForge, VaultForge, and more to come). Need a customized version for your team or
+company? Get in touch: [YOUR LINKEDIN URL]

@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThermoForge.Core\ThermoForge.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="ScottPlot.WPF" Version="5.1.59" />
+    <!-- Transitive via ScottPlot.WPF; ships only a .NET Framework build but runs fine on .NET. -->
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.0" NoWarn="NU1701" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>ThermoForge</AssemblyName>
+    <RootNamespace>ThermoForge.UI</RootNamespace>
+    <ApplicationIcon>Assets\ThermoForge.ico</ApplicationIcon>
+    <Product>ThermoForge</Product>
+    <Company>Forge Studio</Company>
+    <Copyright>© Forge Studio</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\ThermoForge.ico" />
+    <Resource Include="Assets\ThermoForge.png" />
+  </ItemGroup>
+
+</Project>

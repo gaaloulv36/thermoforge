@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ThermoForge.Core/ThermoForge.Core.csproj" />
+    <Project Path="src/ThermoForge.UI/ThermoForge.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ThermoForge.Tests/ThermoForge.Tests.csproj" />
+  </Folder>
+</Solution>

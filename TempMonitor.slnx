@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/TempMonitor.Core/TempMonitor.Core.csproj" />
-    <Project Path="src/TempMonitor.UI/TempMonitor.UI.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/TempMonitor.Tests/TempMonitor.Tests.csproj" />
-  </Folder>
-</Solution>
