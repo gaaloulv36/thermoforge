@@ -23,6 +23,7 @@ public sealed partial class AlertsViewModel : ObservableObject
         _trust = trust;
         _notifyProcesses = settings.NotifyProcesses;
         _notifyTemperature = settings.NotifyTemperature;
+        _notifyStartup = settings.NotifyStartup;
         _closeToTray = settings.CloseToTray;
         RefreshTrusted();
         trust.Changed += (_, _) => Application.Current.Dispatcher.Invoke(RefreshTrusted);
@@ -38,6 +39,9 @@ public sealed partial class AlertsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _notifyTemperature;
+
+    [ObservableProperty]
+    private bool _notifyStartup;
 
     [ObservableProperty]
     private bool _closeToTray;
@@ -71,6 +75,7 @@ public sealed partial class AlertsViewModel : ObservableObject
         {
             AlertKind.Process => NotifyProcesses,
             AlertKind.Temperature => NotifyTemperature,
+            AlertKind.Startup => NotifyStartup,
             _ => true,
         };
     }
@@ -87,6 +92,8 @@ public sealed partial class AlertsViewModel : ObservableObject
     partial void OnNotifyProcessesChanged(bool value) => Save(s => s.NotifyProcesses = value);
 
     partial void OnNotifyTemperatureChanged(bool value) => Save(s => s.NotifyTemperature = value);
+
+    partial void OnNotifyStartupChanged(bool value) => Save(s => s.NotifyStartup = value);
 
     partial void OnCloseToTrayChanged(bool value) => Save(s => s.CloseToTray = value);
 

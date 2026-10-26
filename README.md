@@ -30,8 +30,19 @@ folders, or script-based attacks.
 - Search, "only flagged" filter, open file location, copy path, search online, end process
   (critical Windows processes are protected)
 
+**Startup tab** (everything set to run automatically)
+- Registry Run/RunOnce keys, Startup folders, scheduled tasks, auto-start services and drivers
+- Hijack spots malware loves: Winlogon Shell/Userinit, Image File Execution Options debuggers,
+  SilentProcessExit monitors, permanent WMI event subscriptions
+- Each entry's file is resolved from its command and checked like a running process
+  (signature, location, look-alike names, suspicious command lines), plus missing-file checks
+- **NEW** badge and an alert for anything added after ThermoForge started watching
+- Turn entries off/on the same way Task Manager and Task Scheduler do (nothing is deleted)
+- Clean Microsoft-signed entries are hidden by default to keep the list short
+
 **Alerts & tray**
-- Pop-up notifications when a process becomes risky or a CPU/GPU/drive stays too hot
+- Pop-up notifications when a process becomes risky, something new is set to start with
+  Windows, or a CPU/GPU/drive stays too hot
   (no repeats: once per risk level, and at most every 15 min per sensor)
 - Alerts tab with history, notification settings, pause for 1 hour, and the trusted list
 - Tray icon that turns amber (warning) or red (alert), with a live tooltip;
@@ -60,7 +71,8 @@ For full coverage:
    `winget install namazso.PawnIO` (or https://pawnio.eu/).
 
 Data lives in `%LOCALAPPDATA%\ThermoForge\`: `settings.json` (notification settings),
-`trusted.json` (trusted programs, with each file's SHA-256) and `crash.log`.
+`trusted.json` (trusted programs, with each file's SHA-256), `startup-baseline.json`
+(when each startup entry was first seen) and `crash.log`.
 
 ## Test
 
@@ -104,7 +116,7 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 1. ~~Live temperature dashboard~~ (done)
 2. ~~Process list with signature/path checks~~ (done)
 3. ~~Risk engine, alerts, tray icon~~ (done)
-4. Startup/persistence scanner
+4. ~~Startup/persistence scanner~~ (done)
 5. Network monitor
 6. VirusTotal / Defender integration, reports
 7. Background Windows Service + installer

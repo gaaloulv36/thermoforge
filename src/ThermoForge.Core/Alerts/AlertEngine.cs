@@ -1,6 +1,7 @@
 using ThermoForge.Core.Models;
 using ThermoForge.Core.Processes;
 using ThermoForge.Core.Services;
+using ThermoForge.Core.Startup;
 
 namespace ThermoForge.Core.Alerts;
 
@@ -8,6 +9,7 @@ public enum AlertKind
 {
     Process,
     Temperature,
+    Startup,
 }
 
 /// <param name="Pid">The process the alert is about, for "show me" actions.</param>
@@ -35,8 +37,10 @@ public sealed class AlertEngine
     private readonly Dictionary<(int Pid, DateTime? Started), FindingSeverity> _alertedLevel = new();
     private readonly Dictionary<string, DateTime> _hotSince = new();
     private readonly Dictionary<string, DateTime> _lastTemperatureAlert = new();
+    private readonly HashSet<string> _alertedStartup = new();
     private readonly TemperatureThresholds _thresholds;
     private bool _baselineTaken;
+    private bool _startupBaselineTaken;
 
     public AlertEngine(TemperatureThresholds thresholds)
     {
@@ -121,6 +125,43 @@ public sealed class AlertEngine
 
         return alerts;
     }
+
+    /// <summary>
+    /// New auto-start entries found after the first scan of this session. Entries ThermoForge
+    /// already knew about, or found on the first scan, are shown on the Startup tab instead.
+    /// </summary>
+    public IReadOnlyList<Alert> Evaluate(StartupScan scan)
+    {
+        var alerts = new List<Alert>();
+        foreach (var entry in scan.Entries.Where(e => e.IsNew))
+        {
+            if (!_alertedStartup.Add(entry.Raw.Id) || !_startupBaselineTaken)
+                continue;
+
+            var severity = entry.Severity == FindingSeverity.None ? FindingSeverity.Low : entry.Severity;
+            var top = entry.Findings.MaxBy(f => f.Severity);
+            alerts.Add(new Alert(scan.Timestamp, AlertKind.Startup, severity,
+                $"New startup entry: {entry.Raw.Name}",
+                $"{Describe(entry.Raw.Source)} added: {entry.ImagePath ?? entry.Raw.Command ?? "unknown program"}."
+                + (top is null ? "" : $" {top.Title}.")));
+        }
+
+        _startupBaselineTaken = true;
+        return alerts;
+    }
+
+    public static string Describe(StartupSource source) => source switch
+    {
+        StartupSource.RunKey => "Registry Run key",
+        StartupSource.StartupFolder => "Startup folder item",
+        StartupSource.ScheduledTask => "Scheduled task",
+        StartupSource.Service => "Service",
+        StartupSource.Driver => "Driver",
+        StartupSource.Winlogon => "Winlogon setting",
+        StartupSource.LaunchHijack => "Launch hijack",
+        StartupSource.WmiSubscription => "WMI subscription",
+        _ => source.ToString(),
+    };
 
     private static Alert ForProcess(ProcessInfo info, DateTime time)
     {

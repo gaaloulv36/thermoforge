@@ -52,9 +52,12 @@ public partial class MainWindow : Window
 
     private void Notify(Alert alert)
     {
-        Action open = alert.Pid is { } pid
-            ? () => { ShowFromTray(); _viewModel.ShowProcess(pid); }
-            : () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.AlertsTab; };
+        Action open = alert switch
+        {
+            { Pid: { } pid } => () => { ShowFromTray(); _viewModel.ShowProcess(pid); },
+            { Kind: AlertKind.Startup } => () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.StartupTab; },
+            _ => () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.AlertsTab; },
+        };
         _tray.Notify(alert.Title, alert.Message, alert.Severity >= FindingSeverity.Medium, open);
     }
 

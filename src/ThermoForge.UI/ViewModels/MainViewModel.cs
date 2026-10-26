@@ -8,6 +8,7 @@ using ThermoForge.Core.Models;
 using ThermoForge.Core.Platform;
 using ThermoForge.Core.Processes;
 using ThermoForge.Core.Services;
+using ThermoForge.Core.Startup;
 using ThermoForge.UI.Services;
 
 namespace ThermoForge.UI.ViewModels;
@@ -22,7 +23,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     public const int HardwareTab = 0;
     public const int ProcessesTab = 1;
-    public const int AlertsTab = 2;
+    public const int StartupTab = 2;
+    public const int AlertsTab = 3;
 
     private readonly AlertEngine _alertEngine = new(TemperatureThresholds.Default);
     private bool _startupSummaryDone;
@@ -32,15 +34,18 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Settings = AppSettings.Load();
         var trust = new TrustStore(TrustStore.DefaultPath);
         Processes = new ProcessesViewModel(trust);
+        Startup = new StartupViewModel(trust);
         Alerts = new AlertsViewModel(Settings, trust);
 
         Processes.SnapshotApplied += (_, snapshot) => OnProcessSnapshot(snapshot);
         Hardware.SnapshotApplied += (_, snapshot) => OnSensorSnapshot(snapshot);
+        Startup.ScanApplied += (_, scan) => OnStartupScan(scan);
     }
 
     public AppSettings Settings { get; }
     public HardwareViewModel Hardware { get; } = new();
     public ProcessesViewModel Processes { get; }
+    public StartupViewModel Startup { get; }
     public AlertsViewModel Alerts { get; }
 
     public bool ShowAdminWarning { get; } = !SystemEnvironment.IsAdministrator();
@@ -64,12 +69,14 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public async Task StartAsync()
     {
         Processes.Start();
+        Startup.Start();
         await Hardware.StartAsync();
     }
 
     public async ValueTask DisposeAsync()
     {
         await Processes.DisposeAsync();
+        await Startup.DisposeAsync();
         await Hardware.DisposeAsync();
     }
 
@@ -126,6 +133,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         UpdateTray();
     }
 
+    private void OnStartupScan(StartupScan scan)
+    {
+        Raise(_alertEngine.Evaluate(scan));
+        UpdateTray();
+    }
+
     private void Raise(IReadOnlyList<Alert> alerts)
     {
         foreach (var alert in alerts)
@@ -139,15 +152,15 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void UpdateTray()
     {
         var temperature = Hardware.WorstStatus;
-        TrayStatus = Processes.HasHighRisk || temperature == TemperatureStatus.Hot ? TrayStatus.Alert
-            : Processes.AlertCount > 0 || temperature == TemperatureStatus.Warm ? TrayStatus.Warning
+        TrayStatus = Processes.HasHighRisk || Startup.HasHighRisk || temperature == TemperatureStatus.Hot ? TrayStatus.Alert
+            : Processes.AlertCount > 0 || Startup.AlertCount > 0 || temperature == TemperatureStatus.Warm ? TrayStatus.Warning
             : TrayStatus.Normal;
 
-        var risky = Processes.AlertCount switch
+        var risky = (Processes.AlertCount + Startup.AlertCount) switch
         {
-            0 => "no risky processes",
-            1 => "1 risky process",
-            var n => $"{n} risky processes",
+            0 => "nothing risky",
+            1 => "1 risky item",
+            var n => $"{n} risky items",
         };
         TrayText = $"ThermoForge\nCPU {Hardware.CpuTemperature.Value} · {risky}"
                    + (Alerts.IsPaused ? "\nNotifications paused" : "");
