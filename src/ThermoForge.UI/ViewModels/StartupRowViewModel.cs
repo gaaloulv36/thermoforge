@@ -18,7 +18,7 @@ public sealed partial class StartupRowViewModel : ObservableObject
         nameof(Description), nameof(CanToggle), nameof(StateText), nameof(ToggleText), nameof(Publisher),
         nameof(SignatureText), nameof(Findings), nameof(HasFindings), nameof(FindingsSummary), nameof(Risk),
         nameof(Severity), nameof(IsFlagged), nameof(SeverityText), nameof(RiskText), nameof(IsTrusted),
-        nameof(TrustButtonText), nameof(IsNew), nameof(FirstSeenText), nameof(IsMicrosoft), nameof(Path))]
+        nameof(TrustButtonText), nameof(IsNew), nameof(FirstSeenText), nameof(IsMicrosoft), nameof(Path), nameof(ReputationText))]
     private StartupEntry _entry = null!;
 
     public RawStartupEntry Raw => Entry.Raw;
@@ -59,6 +59,9 @@ public sealed partial class StartupRowViewModel : ObservableObject
     public bool IsMicrosoft => Entry.Findings.Count == 0 && !Entry.IsNew && !StartupScanner.IsScriptHost(Entry.ImagePath)
         && Entry.File?.Signature is { Status: SignatureStatus.Signed, Signer: { } signer }
         && signer.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>VirusTotal / Defender results, one line each; empty when never checked.</summary>
+    public string ReputationText => Entry.Reputation?.Summary ?? "";
 
     public IReadOnlyList<ProcessFinding> Findings => Entry.Findings;
     public bool HasFindings => Findings.Count > 0;

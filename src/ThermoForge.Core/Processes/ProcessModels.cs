@@ -1,4 +1,5 @@
 using ThermoForge.Core.Network;
+using ThermoForge.Core.Reputation;
 
 namespace ThermoForge.Core.Processes;
 
@@ -43,6 +44,7 @@ public sealed record ProcessFinding(FindingSeverity Severity, string Title, stri
 
 /// <param name="GpuPercent">Busiest GPU engine used by the process, like Task Manager's GPU column.</param>
 /// <param name="IsTrusted">The user marked this exact file as known-good; its findings are shown but not scored.</param>
+/// <param name="Reputation">VirusTotal / Defender results for this exact file, if the user had it checked.</param>
 public sealed record ProcessInfo(
     RawProcess Process,
     RawProcess? Parent,
@@ -51,7 +53,8 @@ public sealed record ProcessInfo(
     long WorkingSetBytes,
     FileMetadata? File,
     IReadOnlyList<ProcessFinding> Findings,
-    bool IsTrusted = false)
+    bool IsTrusted = false,
+    FileReputation? Reputation = null)
 {
     /// <summary>0–100; see <see cref="RiskScore"/>.</summary>
     public int Risk => IsTrusted ? 0 : RiskScore.From(Findings);

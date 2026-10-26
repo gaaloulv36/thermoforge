@@ -19,6 +19,10 @@
                 <TextBlock Text="{Binding RiskText}" Margin="0,4,0,0" TextWrapping="Wrap" FontWeight="SemiBold"
                            Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
 
+                <TextBlock Text="ANTIVIRUS CHECKS" Style="{StaticResource SectionLabel}"
+                           Visibility="{Binding ReputationText.Length, Converter={StaticResource ToVisibility}}" />
+                <TextBlock Text="{Binding ReputationText}" TextWrapping="Wrap"
+                           Visibility="{Binding ReputationText.Length, Converter={StaticResource ToVisibility}}" />
                 <TextBlock Text="FINDINGS" Style="{StaticResource SectionLabel}" />
                 <TextBlock Text="No suspicious traits found." Style="{StaticResource SecondaryText}"
                            Visibility="{Binding HasFindings, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
@@ -148,6 +152,12 @@
                                 Style="{StaticResource ActionButton}" Margin="0,0,8,8"
                                 Command="{Binding ToggleTrustCommand}"
                                 ToolTip="Mark this exact file as known-good so it stops raising alerts" />
+                        <Button Content="Check on VirusTotal" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding CheckVirusTotalCommand}"
+                                ToolTip="Look the file up on VirusTotal by its SHA-256 fingerprint. The file itself is never uploaded." />
+                        <Button Content="Scan with Defender" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding ScanWithDefenderCommand}"
+                                ToolTip="Scan this file with Microsoft Defender. Nothing is deleted or quarantined." />
                         <Button Content="End process" Style="{StaticResource DangerButton}" Margin="0,0,8,8"
                                 Command="{Binding EndProcessCommand}" />
                     </WrapPanel>

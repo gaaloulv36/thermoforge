@@ -20,6 +20,12 @@ public sealed class AppSettings
     /// <summary>Pop up a notification when a new program is set to start with Windows.</summary>
     public bool NotifyStartup { get; set; } = true;
 
+    /// <summary>Pop up a notification when Defender is switched off or finds a threat.</summary>
+    public bool NotifySecurity { get; set; } = true;
+
+    /// <summary>VirusTotal API key, encrypted with DPAPI for the current Windows user; see <see cref="ApiKey"/>.</summary>
+    public string? VirusTotalKeyProtected { get; set; }
+
     /// <summary>The window's close button hides to the tray instead of exiting.</summary>
     public bool CloseToTray { get; set; } = true;
 

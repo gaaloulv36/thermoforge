@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using ThermoForge.Core.Processes;
 using ThermoForge.Core.Services;
 using ThermoForge.Core.Startup;
+using ThermoForge.UI.Services;
 
 namespace ThermoForge.UI.ViewModels;
 
@@ -20,14 +21,16 @@ public sealed partial class StartupViewModel : ObservableObject, IAsyncDisposabl
 
     private readonly Dictionary<string, StartupRowViewModel> _rows = new();
     private readonly TrustStore _trust;
+    private readonly FileChecker _checker;
     private readonly SemaphoreSlim _scanLock = new(1, 1);
     private SynchronizationContext? _uiContext;
     private StartupScanner? _scanner;
     private PollingLoop<StartupScan?>? _loop;
 
-    public StartupViewModel(TrustStore trust)
+    public StartupViewModel(TrustStore trust, FileChecker checker)
     {
         _trust = trust;
+        _checker = checker;
         EntriesView = new ListCollectionView(Entries)
         {
             Filter = Matches,
@@ -56,7 +59,8 @@ public sealed partial class StartupViewModel : ObservableObject, IAsyncDisposabl
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ToggleEnabledCommand), nameof(OpenFileLocationCommand),
-        nameof(CopyCommandCommand), nameof(SearchOnlineCommand), nameof(ToggleTrustCommand))]
+        nameof(CopyCommandCommand), nameof(SearchOnlineCommand), nameof(ToggleTrustCommand),
+        nameof(CheckVirusTotalCommand), nameof(ScanWithDefenderCommand))]
     private StartupRowViewModel? _selectedEntry;
 
     [ObservableProperty]
@@ -77,7 +81,7 @@ public sealed partial class StartupViewModel : ObservableObject, IAsyncDisposabl
         _uiContext = SynchronizationContext.Current
             ?? throw new InvalidOperationException("Start must be called from the UI thread.");
 
-        _scanner = StartupScanner.ForCurrentSystem(_trust);
+        _scanner = StartupScanner.ForCurrentSystem(_trust, _checker.Store);
         _loop = new PollingLoop<StartupScan?>(() => ScanOnce(), ScanInterval);
         _loop.Polled += (_, scan) =>
         {
@@ -160,6 +164,20 @@ public sealed partial class StartupViewModel : ObservableObject, IAsyncDisposabl
         Process.Start("explorer.exe", $"/select,\"{SelectedEntry!.Path}\"");
 
     private bool HasPath() => SelectedEntry?.Path is not null;
+
+    [RelayCommand(CanExecute = nameof(HasPath))]
+    private async Task CheckVirusTotalAsync()
+    {
+        if (await _checker.CheckVirusTotalInteractiveAsync(SelectedEntry!.Path!) is not null)
+            await RescanAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(HasPath))]
+    private async Task ScanWithDefenderAsync()
+    {
+        if (await _checker.ScanWithDefenderInteractiveAsync(SelectedEntry!.Path!) is not null)
+            await RescanAsync();
+    }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void CopyCommand()

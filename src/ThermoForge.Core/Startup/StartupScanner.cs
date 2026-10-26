@@ -1,5 +1,6 @@
 using ThermoForge.Core.Platform;
 using ThermoForge.Core.Processes;
+using ThermoForge.Core.Reputation;
 
 namespace ThermoForge.Core.Startup;
 
@@ -30,6 +31,7 @@ public sealed class StartupScanner
     private readonly Func<string, bool> _fileExists;
     private readonly Func<string, FileMetadata> _metadata;
     private readonly string _elevation;
+    private readonly ReputationStore? _reputation;
 
     public StartupScanner(
         IReadOnlyList<IStartupSource> sources,
@@ -39,7 +41,8 @@ public sealed class StartupScanner
         StartupBaseline baseline,
         Func<string, bool>? fileExists = null,
         Func<string, FileMetadata>? metadata = null,
-        bool? isAdministrator = null)
+        bool? isAdministrator = null,
+        ReputationStore? reputation = null)
     {
         _sources = sources;
         _command = command;
@@ -50,15 +53,17 @@ public sealed class StartupScanner
         _metadata = metadata ?? new FileMetadataCache().Get;
         // Admin rights reveal entries Windows otherwise hides; each level keeps its own baseline.
         _elevation = (isAdministrator ?? SystemEnvironment.IsAdministrator()) ? "admin" : "user";
+        _reputation = reputation;
     }
 
-    public static StartupScanner ForCurrentSystem(TrustStore trust) => new(
+    public static StartupScanner ForCurrentSystem(TrustStore trust, ReputationStore? reputation = null) => new(
         [new RunKeySource(), new StartupFolderSource(), new ScheduledTaskSource(), new ServiceSource(),
          new WinlogonSource(), new LaunchHijackSource(), new WmiSubscriptionSource()],
         StartupCommand.ForCurrentSystem(),
         ProcessAnalyzer.ForCurrentSystem(),
         trust,
-        new StartupBaseline(StartupBaseline.DefaultPath));
+        new StartupBaseline(StartupBaseline.DefaultPath),
+        reputation: reputation);
 
     public StartupScan Scan()
     {
@@ -111,6 +116,10 @@ public sealed class StartupScanner
                     "Runs a command shell or script host automatically. Common for admin tools, but check what the command does."));
         }
 
+        var reputation = file is null ? null : _reputation?.For(image);
+        if (reputation is not null)
+            findings.AddRange(reputation.Findings());
+
         return new StartupEntry(
             raw,
             image,
@@ -119,6 +128,7 @@ public sealed class StartupScanner
             findings,
             _trust.IsTrusted(file is null ? null : image),
             seen.FirstSeenUtc.ToLocalTime(),
-            seen.IsNew);
+            seen.IsNew,
+            reputation);
     }
 }

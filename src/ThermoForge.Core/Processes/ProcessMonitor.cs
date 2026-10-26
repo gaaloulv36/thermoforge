@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Management;
 using ThermoForge.Core.Network;
+using ThermoForge.Core.Reputation;
 using ThermoForge.Core.Platform;
 
 namespace ThermoForge.Core.Processes;
@@ -10,7 +11,7 @@ namespace ThermoForge.Core.Processes;
 /// times, without opening each process), derives CPU % from the change since the previous
 /// snapshot, and runs every process through <see cref="ProcessAnalyzer"/> and
 /// <see cref="BehaviorTracker"/>, and adds what <see cref="NetworkMonitor"/> finds about their
-/// connections. Programs in the <see cref="TrustStore"/> keep their findings
+/// connections and any VirusTotal / Defender results. Programs in the <see cref="TrustStore"/> keep their findings
 /// for display but score zero risk.
 /// Call <see cref="Poll"/> from a single thread.
 /// </summary>
@@ -28,15 +29,18 @@ public sealed class ProcessMonitor : IDisposable
     private readonly TrustStore _trust;
     private readonly Func<TimeSpan> _userIdle;
     private readonly NetworkMonitor _network;
+    private readonly ReputationStore? _reputation;
     private Dictionary<ProcessKey, ulong> _previousCpuTime = new();
     private DateTime _previousPollUtc;
 
-    public ProcessMonitor(ProcessAnalyzer analyzer, TrustStore trust, Func<TimeSpan>? userIdle = null, NetworkMonitor? network = null)
+    public ProcessMonitor(ProcessAnalyzer analyzer, TrustStore trust, Func<TimeSpan>? userIdle = null, NetworkMonitor? network = null,
+        ReputationStore? reputation = null)
     {
         _analyzer = analyzer;
         _trust = trust;
         _userIdle = userIdle ?? SystemEnvironment.UserIdleTime;
         _network = network ?? new NetworkMonitor();
+        _reputation = reputation;
     }
 
     public ProcessSnapshot Poll()
@@ -98,6 +102,9 @@ public sealed class ProcessMonitor : IDisposable
                 findings = [.. findings, busy];
             if (network.FindingsByPid.TryGetValue(process.Pid, out var networkFindings))
                 findings = [.. findings, .. networkFindings];
+            var reputation = _reputation?.For(process.Path);
+            if (reputation is not null)
+                findings = [.. findings, .. reputation.Findings()];
 
             processes.Add(new ProcessInfo(
                 process,
@@ -107,7 +114,8 @@ public sealed class ProcessMonitor : IDisposable
                 m.Sample.WorkingSetBytes,
                 m.File,
                 findings,
-                _trust.IsTrusted(process.Path)));
+                _trust.IsTrusted(process.Path),
+                reputation));
         }
 
         _previousCpuTime = cpuTimes;

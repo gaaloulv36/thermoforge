@@ -61,6 +61,7 @@ public sealed record RawStartupEntry(
 /// <param name="ImagePath">The file the entry runs, resolved from its command; null when it can't be worked out.</param>
 /// <param name="FileMissing">The entry points to a file that doesn't exist.</param>
 /// <param name="IsNew">First seen after ThermoForge's first scan, within the last week.</param>
+/// <param name="Reputation">VirusTotal / Defender results for the file, if the user had it checked.</param>
 public sealed record StartupEntry(
     RawStartupEntry Raw,
     string? ImagePath,
@@ -69,7 +70,8 @@ public sealed record StartupEntry(
     IReadOnlyList<ProcessFinding> Findings,
     bool IsTrusted,
     DateTime FirstSeen,
-    bool IsNew)
+    bool IsNew,
+    Reputation.FileReputation? Reputation = null)
 {
     public int Risk => IsTrusted ? 0 : RiskScore.From(Findings);
 

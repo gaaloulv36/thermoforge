@@ -7,6 +7,7 @@ using ThermoForge.Core.Alerts;
 using ThermoForge.Core.Models;
 using ThermoForge.Core.Platform;
 using ThermoForge.Core.Processes;
+using ThermoForge.Core.Reputation;
 using ThermoForge.Core.Services;
 using ThermoForge.Core.Startup;
 using ThermoForge.UI.Services;
@@ -25,7 +26,8 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public const int ProcessesTab = 1;
     public const int NetworkTab = 2;
     public const int StartupTab = 3;
-    public const int AlertsTab = 4;
+    public const int SecurityTab = 4;
+    public const int AlertsTab = 5;
 
     private readonly AlertEngine _alertEngine = new(TemperatureThresholds.Default);
     private bool _startupSummaryDone;
@@ -33,19 +35,38 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public MainViewModel()
     {
         Settings = AppSettings.Load();
-        var trust = new TrustStore(TrustStore.DefaultPath);
-        Processes = new ProcessesViewModel(trust);
-        Startup = new StartupViewModel(trust);
+        var hashes = new FileHashCache();
+        var trust = new TrustStore(TrustStore.DefaultPath, hashes);
+        var checker = new FileChecker(new ReputationStore(ReputationStore.DefaultPath, hashes), Settings);
+        Processes = new ProcessesViewModel(trust, checker);
+        Startup = new StartupViewModel(trust, checker);
         Alerts = new AlertsViewModel(Settings, trust);
+        Security = new SecurityViewModel(checker, Alerts);
 
         Processes.SnapshotApplied += (_, snapshot) =>
         {
+            Security.LatestProcesses = snapshot;
             Network.Apply(snapshot);
             OnProcessSnapshot(snapshot);
         };
         Network.ProcessRequested += (_, pid) => ShowProcess(pid);
-        Hardware.SnapshotApplied += (_, snapshot) => OnSensorSnapshot(snapshot);
-        Startup.ScanApplied += (_, scan) => OnStartupScan(scan);
+        Hardware.SnapshotApplied += (_, snapshot) =>
+        {
+            Security.LatestSensors = snapshot;
+            OnSensorSnapshot(snapshot);
+        };
+        Startup.ScanApplied += (_, scan) =>
+        {
+            Security.LatestStartup = scan;
+            OnStartupScan(scan);
+        };
+        Security.DefenderChecked += (_, reading) =>
+        {
+            Raise(_alertEngine.Evaluate(reading.Status, reading.Detections, reading.Time));
+            UpdateTray();
+        };
+        Security.FilesChecked += (_, _) => Startup.RescanCommand.Execute(null);
+        checker.KeyNeeded += (_, _) => SelectedTab = SecurityTab;
     }
 
     public AppSettings Settings { get; }
@@ -53,6 +74,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public ProcessesViewModel Processes { get; }
     public NetworkViewModel Network { get; } = new();
     public StartupViewModel Startup { get; }
+    public SecurityViewModel Security { get; }
     public AlertsViewModel Alerts { get; }
 
     public bool ShowAdminWarning { get; } = !SystemEnvironment.IsAdministrator();
@@ -77,6 +99,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         Processes.Start();
         Startup.Start();
+        Security.Start();
         await Hardware.StartAsync();
     }
 
@@ -84,6 +107,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     {
         await Processes.DisposeAsync();
         await Startup.DisposeAsync();
+        await Security.DisposeAsync();
         await Hardware.DisposeAsync();
     }
 
@@ -159,11 +183,13 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     private void UpdateTray()
     {
         var temperature = Hardware.WorstStatus;
-        TrayStatus = Processes.HasHighRisk || Startup.HasHighRisk || temperature == TemperatureStatus.Hot ? TrayStatus.Alert
-            : Processes.AlertCount > 0 || Startup.AlertCount > 0 || temperature == TemperatureStatus.Warm ? TrayStatus.Warning
+        TrayStatus = Processes.HasHighRisk || Startup.HasHighRisk || Security.HasHighRisk || temperature == TemperatureStatus.Hot
+                ? TrayStatus.Alert
+            : Processes.AlertCount > 0 || Startup.AlertCount > 0 || Security.AlertCount > 0 || temperature == TemperatureStatus.Warm
+                ? TrayStatus.Warning
             : TrayStatus.Normal;
 
-        var risky = (Processes.AlertCount + Startup.AlertCount) switch
+        var risky = (Processes.AlertCount + Startup.AlertCount + Security.AlertCount) switch
         {
             0 => "nothing risky",
             1 => "1 risky item",

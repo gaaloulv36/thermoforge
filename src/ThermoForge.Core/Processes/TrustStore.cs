@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace ThermoForge.Core.Processes;
@@ -15,11 +14,13 @@ public sealed class TrustStore
     private readonly string _filePath;
     private readonly object _lock = new();
     private readonly Dictionary<string, TrustedProgram> _byPath = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, HashEntry> _hashes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly FileHashCache _hashes;
 
-    public TrustStore(string filePath)
+    /// <param name="hashes">Shared with other checks that hash the same files.</param>
+    public TrustStore(string filePath, FileHashCache? hashes = null)
     {
         _filePath = filePath;
+        _hashes = hashes ?? new FileHashCache();
         foreach (var program in Load(filePath))
             _byPath[program.Path] = program;
     }
@@ -76,32 +77,7 @@ public sealed class TrustStore
     }
 
     /// <summary>Hashes are cached per file version so trusted programs aren't re-read every poll.</summary>
-    private string? HashOf(string path)
-    {
-        try
-        {
-            var file = new FileInfo(path);
-            if (!file.Exists)
-                return null;
-
-            lock (_lock)
-            {
-                if (_hashes.TryGetValue(path, out var cached)
-                    && cached.LastWriteUtc == file.LastWriteTimeUtc && cached.Length == file.Length)
-                    return cached.Sha256;
-            }
-
-            using var stream = File.OpenRead(path);
-            var hash = Convert.ToHexString(SHA256.HashData(stream));
-            lock (_lock)
-                _hashes[path] = new HashEntry(file.LastWriteTimeUtc, file.Length, hash);
-            return hash;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
-    }
+    private string? HashOf(string path) => _hashes.Sha256(path);
 
     private void Save()
     {
@@ -123,8 +99,6 @@ public sealed class TrustStore
             return [];
         }
     }
-
-    private sealed record HashEntry(DateTime LastWriteUtc, long Length, string Sha256);
 }
 
 public sealed record TrustedProgram(string Path, string Name, string? Publisher, string Sha256, DateTime TrustedAt);

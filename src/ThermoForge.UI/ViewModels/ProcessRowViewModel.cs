@@ -55,6 +55,10 @@ public sealed partial class ProcessRowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTrusted;
 
+    /// <summary>VirusTotal / Defender results, one line each; empty when never checked.</summary>
+    [ObservableProperty]
+    private string _reputationText = "";
+
     public string CpuText => CpuPercent.ToString("F1", CultureInfo.CurrentCulture) + " %";
 
     public string GpuText => GpuPercent < 0.5 ? "" : GpuPercent.ToString("F0", CultureInfo.CurrentCulture) + " %";
@@ -101,6 +105,7 @@ public sealed partial class ProcessRowViewModel : ObservableObject
         Risk = info.Risk;
         Severity = info.Severity;
         IsTrusted = info.IsTrusted;
+        ReputationText = info.Reputation?.Summary ?? "";
     }
 
     partial void OnCpuPercentChanged(double value) => OnPropertyChanged(nameof(CpuText));

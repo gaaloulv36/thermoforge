@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ThermoForge.Core.Processes;
 using ThermoForge.Core.Services;
+using ThermoForge.UI.Services;
 
 namespace ThermoForge.UI.ViewModels;
 
@@ -18,13 +19,15 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
 
     private readonly Dictionary<(int Pid, DateTime? Started), ProcessRowViewModel> _rows = new();
     private readonly TrustStore _trust;
+    private readonly FileChecker _checker;
     private SynchronizationContext? _uiContext;
     private ProcessMonitor? _monitor;
     private PollingLoop<ProcessSnapshot>? _loop;
 
-    public ProcessesViewModel(TrustStore trust)
+    public ProcessesViewModel(TrustStore trust, FileChecker checker)
     {
         _trust = trust;
+        _checker = checker;
         ProcessesView = new ListCollectionView(Processes)
         {
             Filter = Matches,
@@ -48,7 +51,8 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(EndProcessCommand), nameof(OpenFileLocationCommand),
-        nameof(CopyPathCommand), nameof(SearchOnlineCommand), nameof(ToggleTrustCommand))]
+        nameof(CopyPathCommand), nameof(SearchOnlineCommand), nameof(ToggleTrustCommand),
+        nameof(CheckVirusTotalCommand), nameof(ScanWithDefenderCommand))]
     private ProcessRowViewModel? _selectedProcess;
 
     [ObservableProperty]
@@ -82,7 +86,7 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
         _uiContext = SynchronizationContext.Current
             ?? throw new InvalidOperationException("Start must be called from the UI thread.");
 
-        _monitor = new ProcessMonitor(ProcessAnalyzer.ForCurrentSystem(), _trust);
+        _monitor = new ProcessMonitor(ProcessAnalyzer.ForCurrentSystem(), _trust, reputation: _checker.Store);
         _loop = new PollingLoop<ProcessSnapshot>(_monitor.Poll, PollInterval);
         _loop.Polled += (_, snapshot) => _uiContext.Post(_ => Apply(snapshot), null);
         _loop.Faulted += (_, ex) => _uiContext.Post(_ => StatusText = $"Process scan failed: {ex.Message}", null);
@@ -140,6 +144,13 @@ public sealed partial class ProcessesViewModel : ObservableObject, IAsyncDisposa
     }
 
     private bool HasPath() => SelectedProcess?.Path is not null;
+
+    /// <summary>The result shows up as a finding on the next poll, a few seconds later.</summary>
+    [RelayCommand(CanExecute = nameof(HasPath))]
+    private async Task CheckVirusTotalAsync() => await _checker.CheckVirusTotalInteractiveAsync(SelectedProcess!.Path!);
+
+    [RelayCommand(CanExecute = nameof(HasPath))]
+    private async Task ScanWithDefenderAsync() => await _checker.ScanWithDefenderInteractiveAsync(SelectedProcess!.Path!);
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void SearchOnline()

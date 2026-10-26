@@ -1,5 +1,6 @@
 using ThermoForge.Core.Models;
 using ThermoForge.Core.Processes;
+using ThermoForge.Core.Reputation;
 using ThermoForge.Core.Services;
 using ThermoForge.Core.Startup;
 
@@ -10,6 +11,9 @@ public enum AlertKind
     Process,
     Temperature,
     Startup,
+
+    /// <summary>Antivirus problems: Defender turned off, or a threat it found.</summary>
+    Security,
 }
 
 /// <param name="Pid">The process the alert is about, for "show me" actions.</param>
@@ -41,6 +45,9 @@ public sealed class AlertEngine
     private readonly TemperatureThresholds _thresholds;
     private bool _baselineTaken;
     private bool _startupBaselineTaken;
+    private readonly HashSet<string> _knownDetections = new();
+    private bool _detectionsBaselineTaken;
+    private string? _lastDefenderProblem;
 
     public AlertEngine(TemperatureThresholds thresholds)
     {
@@ -147,6 +154,36 @@ public sealed class AlertEngine
         }
 
         _startupBaselineTaken = true;
+        return alerts;
+    }
+
+    /// <summary>
+    /// Defender switched off (once per problem) and threats it detects while ThermoForge runs.
+    /// Its older history is on the Security tab, not alerted again.
+    /// </summary>
+    public IReadOnlyList<Alert> Evaluate(DefenderStatus? status, IReadOnlyList<DefenderDetection> detections, DateTime now)
+    {
+        var alerts = new List<Alert>();
+        var problem = status?.Problem(now);
+        if (problem is not null && problem != _lastDefenderProblem)
+        {
+            var weakened = status!.AntivirusEnabled && status.RealTimeProtection;
+            alerts.Add(new Alert(now, AlertKind.Security, weakened ? FindingSeverity.Medium : FindingSeverity.High,
+                weakened ? "Antivirus needs attention" : "Antivirus protection is off",
+                problem + " Open Windows Security to fix it."));
+        }
+        _lastDefenderProblem = problem;
+
+        foreach (var detection in detections.OrderBy(d => d.Time))
+        {
+            if (!_knownDetections.Add(detection.Id) || !_detectionsBaselineTaken)
+                continue;
+            var where = detection.Resources.FirstOrDefault() ?? detection.ProcessName ?? "unknown location";
+            alerts.Add(new Alert(detection.Time, AlertKind.Security, FindingSeverity.High,
+                $"Microsoft Defender found {detection.Threat}",
+                $"{detection.Status}: {where}."));
+        }
+        _detectionsBaselineTaken = true;
         return alerts;
     }
 

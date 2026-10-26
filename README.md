@@ -48,9 +48,22 @@ script-based attacks, hidden auto-start entries and programs phoning home.
   program's risk score on the Processes tab, so they raise the same alerts
 - "Check address online" opens the address's AbuseIPDB page (only when you click it)
 
+**Security tab** (antivirus checks and reports)
+- Microsoft Defender status (active / standing by for another antivirus, real-time protection,
+  definition age) and its detection history; alerts if protection is switched off or Defender
+  finds something while ThermoForge runs
+- **Check on VirusTotal** for any process or startup file: only the file's SHA-256 is sent,
+  never the file, and only when you click. Free API key, stored encrypted (DPAPI) for your Windows account
+- **Scan with Defender** for any process or startup file (nothing is quarantined; you decide)
+- "Check flagged files" looks up every flagged program in one go, paced to the free tier (4 a minute)
+- Detections become findings, so they raise the risk score and alerts. Results are tied to the
+  exact file (SHA-256), so a changed file has to be checked again
+- **Export a report**: a self-contained HTML page (verdict, flagged items, temperatures, internet
+  traffic, Defender history, file checks, alerts) that prints cleanly, or JSON
+
 **Alerts & tray**
 - Pop-up notifications when a process becomes risky, something new is set to start with
-  Windows, or a CPU/GPU/drive stays too hot
+  Windows, a CPU/GPU/drive stays too hot, or antivirus protection is off / finds a threat
   (no repeats: once per risk level, and at most every 15 min per sensor)
 - Alerts tab with history, notification settings, pause for 1 hour, and the trusted list
 - Tray icon that turns amber (warning) or red (alert), with a live tooltip;
@@ -80,7 +93,8 @@ For full coverage:
 
 Data lives in `%LOCALAPPDATA%\ThermoForge\`: `settings.json` (notification settings),
 `trusted.json` (trusted programs, with each file's SHA-256), `startup-baseline.json`
-(when each startup entry was first seen) and `crash.log`.
+(when each startup entry was first seen), `reputation.json` (VirusTotal / Defender results per
+SHA-256) and `crash.log`. The VirusTotal key is kept in `settings.json`, encrypted with DPAPI.
 
 ## Test
 
@@ -112,6 +126,8 @@ Each process is checked every 3 s. Findings are hints, not verdicts: every rule 
 | Hidden-window PowerShell, Base64 decoding, browser starting a script host | Medium |
 | Unsigned program in a normal location; execution-policy bypass | Low |
 | Keeps CPU ≥ 25 % or GPU ≥ 40 % busy for 2+ min while you're away (2+ min idle) | High if unsigned, Medium if unknown, Low if signed |
+| Microsoft Defender detects the file (on-demand scan) | High |
+| VirusTotal: 5+ engines detect the file / 2–4 / 1 (or only "suspicious") | High / Medium / Low |
 
 ## Network checks
 
@@ -143,7 +159,7 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 3. ~~Risk engine, alerts, tray icon~~ (done)
 4. ~~Startup/persistence scanner~~ (done)
 5. ~~Network monitor~~ (done)
-6. VirusTotal / Defender integration, reports
+6. ~~VirusTotal / Defender integration, reports~~ (done)
 7. Background Windows Service + installer
 
 ## About Forge Studio
