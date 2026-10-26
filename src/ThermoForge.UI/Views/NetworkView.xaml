@@ -1,0 +1,144 @@
+<UserControl x:Class="ThermoForge.UI.Views.NetworkView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ThermoForge.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:NetworkViewModel}">
+
+    <UserControl.Resources>
+        <!-- Details pane for the selected connection. -->
+        <DataTemplate DataType="{x:Type vm:ConnectionRowViewModel}">
+            <StackPanel>
+                <TextBlock Text="{Binding ProcessText}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                           Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap">
+                    <Run Text="{Binding ProtocolText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DirectionText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding StateText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding FirstSeenText, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock Text="{Binding SignatureText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RiskText}" Margin="0,4,0,0" TextWrapping="Wrap" FontWeight="SemiBold"
+                           Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                <TextBlock Text="{Binding ProcessRiskText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0"
+                           Visibility="{Binding ProcessRiskText.Length, Converter={StaticResource ToVisibility}}" />
+
+                <TextBlock Text="FINDINGS" Style="{StaticResource SectionLabel}" />
+                <TextBlock Text="No suspicious traits found." Style="{StaticResource SecondaryText}"
+                           Visibility="{Binding HasFindings, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                <ItemsControl ItemsSource="{Binding Findings}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="3,0,0,0" Padding="10,4,0,4" Margin="0,0,0,8"
+                                    BorderBrush="{Binding Severity, Converter={StaticResource SeverityToBrush}}">
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap"
+                                               Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}">
+                                        <Run Text="{Binding Severity, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding Title, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding Detail}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="REMOTE" Style="{StaticResource SectionLabel}" />
+                <TextBox Text="{Binding RemoteText, Mode=OneWay}" Style="{StaticResource ReadOnlyText}"
+                         Visibility="{Binding RemoteText.Length, Converter={StaticResource ToVisibility}}" />
+                <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0">
+                    <Run Text="{Binding ScopeText, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding HostText, Mode=OneWay}" />
+                </TextBlock>
+
+                <TextBlock Text="LOCAL" Style="{StaticResource SectionLabel}" />
+                <TextBox Text="{Binding LocalText, Mode=OneWay}" Style="{StaticResource ReadOnlyText}" />
+
+                <TextBlock Text="PROGRAM" Style="{StaticResource SectionLabel}" />
+                <TextBox Text="{Binding PathText, Mode=OneWay}" Style="{StaticResource ReadOnlyText}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+            <Grid Width="320">
+                <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="Search program, address, host name or port…" Margin="10,0,0,0" VerticalAlignment="Center"
+                           IsHitTestVisible="False" Style="{StaticResource SecondaryText}"
+                           Visibility="{Binding Text.Length, ElementName=SearchBox, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+            </Grid>
+            <CheckBox Content="Only flagged" IsChecked="{Binding ShowFlaggedOnly}" Margin="16,0,0,0" />
+            <CheckBox Content="Show listening ports" IsChecked="{Binding ShowListening}" Margin="16,0,0,0" />
+            <CheckBox Content="Hide traffic inside this PC" IsChecked="{Binding HideThisPc}" Margin="16,0,0,0" />
+            <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" VerticalAlignment="Center"
+                       Margin="16,0,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding StatusText}" />
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="400" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Connection list -->
+            <Border Grid.Column="0" Style="{StaticResource CardBorder}" Padding="0">
+                <DataGrid Style="{StaticResource DarkDataGrid}" IsReadOnly="True"
+                          ItemsSource="{Binding ConnectionsView}" SelectedItem="{Binding SelectedConnection}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Risk" Width="84" SortMemberPath="Risk">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding SeverityText.Length, Converter={StaticResource ToVisibility}}">
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                 Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                                        <TextBlock Text="{Binding SeverityText}"
+                                                   Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Program" Binding="{Binding ProcessName}" Width="1.1*" />
+                        <DataGridTextColumn Header="PID" Binding="{Binding Pid}" Width="64" />
+                        <DataGridTextColumn Header="Dir" Binding="{Binding DirectionText}" Width="86" />
+                        <DataGridTextColumn Header="Proto" Binding="{Binding ProtocolText}" Width="56" />
+                        <DataGridTextColumn Header="Address" Binding="{Binding AddressText}" Width="1.6*" MinWidth="140" />
+                        <DataGridTextColumn Header="Host name" Binding="{Binding HostText}" Width="1.6*" />
+                        <DataGridTextColumn Header="Where" Binding="{Binding ScopeText}" Width="110" />
+                        <DataGridTextColumn Header="Findings" Binding="{Binding FindingsSummary}" Width="1.4*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Details -->
+            <Border Grid.Column="2" Style="{StaticResource CardBorder}">
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                        <Button Content="Show process" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding ShowProcessCommand}"
+                                ToolTip="Open this program on the Processes tab, where you can end or trust it." />
+                        <Button Content="Copy address" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding CopyAddressCommand}" />
+                        <Button Content="Check address online" Style="{StaticResource ActionButton}" Margin="0,0,8,8"
+                                Command="{Binding CheckAddressOnlineCommand}"
+                                ToolTip="Opens AbuseIPDB in your browser to see whether others reported this address." />
+                    </WrapPanel>
+                    <Grid>
+                        <TextBlock Text="Select a connection to see which program owns it, where it goes and why it was flagged."
+                                   Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                   Visibility="{Binding SelectedConnection, Converter={StaticResource ToVisibility}, ConverterParameter=Invert}" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ContentControl Content="{Binding SelectedConnection}" />
+                        </ScrollViewer>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

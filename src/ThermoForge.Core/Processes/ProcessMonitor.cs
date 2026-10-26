@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Management;
+using ThermoForge.Core.Network;
 using ThermoForge.Core.Platform;
 
 namespace ThermoForge.Core.Processes;
@@ -7,7 +9,8 @@ namespace ThermoForge.Core.Processes;
 /// Takes process snapshots from WMI (one query gives paths, command lines, parents and CPU
 /// times, without opening each process), derives CPU % from the change since the previous
 /// snapshot, and runs every process through <see cref="ProcessAnalyzer"/> and
-/// <see cref="BehaviorTracker"/>. Programs in the <see cref="TrustStore"/> keep their findings
+/// <see cref="BehaviorTracker"/>, and adds what <see cref="NetworkMonitor"/> finds about their
+/// connections. Programs in the <see cref="TrustStore"/> keep their findings
 /// for display but score zero risk.
 /// Call <see cref="Poll"/> from a single thread.
 /// </summary>
@@ -24,14 +27,16 @@ public sealed class ProcessMonitor : IDisposable
     private readonly ProcessAnalyzer _analyzer;
     private readonly TrustStore _trust;
     private readonly Func<TimeSpan> _userIdle;
+    private readonly NetworkMonitor _network;
     private Dictionary<ProcessKey, ulong> _previousCpuTime = new();
     private DateTime _previousPollUtc;
 
-    public ProcessMonitor(ProcessAnalyzer analyzer, TrustStore trust, Func<TimeSpan>? userIdle = null)
+    public ProcessMonitor(ProcessAnalyzer analyzer, TrustStore trust, Func<TimeSpan>? userIdle = null, NetworkMonitor? network = null)
     {
         _analyzer = analyzer;
         _trust = trust;
         _userIdle = userIdle ?? SystemEnvironment.UserIdleTime;
+        _network = network ?? new NetworkMonitor();
     }
 
     public ProcessSnapshot Poll()
@@ -63,6 +68,21 @@ public sealed class ProcessMonitor : IDisposable
             nowUtc,
             _userIdle());
 
+        NetworkMonitor.Observation network;
+        string? networkError = null;
+        try
+        {
+            network = _network.Observe(
+                measured.ToDictionary(m => m.Sample.Process.Pid, m => new NetworkMonitor.Owner(m.Sample.Process, m.File?.Signature)),
+                nowUtc);
+        }
+        catch (Win32Exception ex)
+        {
+            // Process monitoring goes on without connection data.
+            network = new([], new Dictionary<int, IReadOnlyList<ProcessFinding>>());
+            networkError = ex.Message;
+        }
+
         var processes = new List<ProcessInfo>(samples.Count);
         foreach (var m in measured)
         {
@@ -76,6 +96,8 @@ public sealed class ProcessMonitor : IDisposable
             if (process.Pid != Environment.ProcessId
                 && behavior.TryGetValue(new(process.Pid, process.StartTime), out var busy))
                 findings = [.. findings, busy];
+            if (network.FindingsByPid.TryGetValue(process.Pid, out var networkFindings))
+                findings = [.. findings, .. networkFindings];
 
             processes.Add(new ProcessInfo(
                 process,
@@ -90,7 +112,7 @@ public sealed class ProcessMonitor : IDisposable
 
         _previousCpuTime = cpuTimes;
         _previousPollUtc = nowUtc;
-        return new ProcessSnapshot(DateTime.Now, processes);
+        return new ProcessSnapshot(DateTime.Now, processes) { Connections = network.Connections, NetworkError = networkError };
     }
 
     public void Dispose()

@@ -1,3 +1,5 @@
+using ThermoForge.Core.Network;
+
 namespace ThermoForge.Core.Processes;
 
 /// <summary>Process facts as reported by Windows, before any analysis.</summary>
@@ -57,4 +59,11 @@ public sealed record ProcessInfo(
     public FindingSeverity Severity => RiskScore.Level(Risk);
 }
 
-public sealed record ProcessSnapshot(DateTime Timestamp, IReadOnlyList<ProcessInfo> Processes);
+public sealed record ProcessSnapshot(DateTime Timestamp, IReadOnlyList<ProcessInfo> Processes)
+{
+    /// <summary>Every socket at the time of the snapshot, tied to the processes above.</summary>
+    public IReadOnlyList<NetConnection> Connections { get; init; } = [];
+
+    /// <summary>Why the connection table couldn't be read, if it couldn't.</summary>
+    public string? NetworkError { get; init; }
+}

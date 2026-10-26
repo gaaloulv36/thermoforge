@@ -23,8 +23,9 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
 
     public const int HardwareTab = 0;
     public const int ProcessesTab = 1;
-    public const int StartupTab = 2;
-    public const int AlertsTab = 3;
+    public const int NetworkTab = 2;
+    public const int StartupTab = 3;
+    public const int AlertsTab = 4;
 
     private readonly AlertEngine _alertEngine = new(TemperatureThresholds.Default);
     private bool _startupSummaryDone;
@@ -37,7 +38,12 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Startup = new StartupViewModel(trust);
         Alerts = new AlertsViewModel(Settings, trust);
 
-        Processes.SnapshotApplied += (_, snapshot) => OnProcessSnapshot(snapshot);
+        Processes.SnapshotApplied += (_, snapshot) =>
+        {
+            Network.Apply(snapshot);
+            OnProcessSnapshot(snapshot);
+        };
+        Network.ProcessRequested += (_, pid) => ShowProcess(pid);
         Hardware.SnapshotApplied += (_, snapshot) => OnSensorSnapshot(snapshot);
         Startup.ScanApplied += (_, scan) => OnStartupScan(scan);
     }
@@ -45,6 +51,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public AppSettings Settings { get; }
     public HardwareViewModel Hardware { get; } = new();
     public ProcessesViewModel Processes { get; }
+    public NetworkViewModel Network { get; } = new();
     public StartupViewModel Startup { get; }
     public AlertsViewModel Alerts { get; }
 

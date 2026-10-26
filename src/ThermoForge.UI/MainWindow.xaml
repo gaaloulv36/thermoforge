@@ -30,7 +30,7 @@
                 </TextBlock>
                 <TextBlock Text="by Forge Studio" Style="{StaticResource SecondaryText}" Margin="10,0,0,2" VerticalAlignment="Bottom" />
             </StackPanel>
-            <TextBlock Text="Hardware temperatures and suspicious background activity" Style="{StaticResource SecondaryText}" />
+            <TextBlock Text="Hardware temperatures, suspicious background activity and network connections" Style="{StaticResource SecondaryText}" />
         </StackPanel>
 
         <!-- Warnings -->
@@ -75,6 +75,21 @@
                     </StackPanel>
                 </TabItem.Header>
                 <views:ProcessesView DataContext="{Binding Processes}" />
+            </TabItem>
+            <TabItem AutomationProperties.Name="Network">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Network" />
+                        <Border Background="{StaticResource StatusHotBrush}" CornerRadius="9" MinWidth="18" Height="18"
+                                Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                                ToolTip="Programs with a Medium or High network finding"
+                                Visibility="{Binding Network.AlertCount, Converter={StaticResource ToVisibility}}">
+                            <TextBlock Text="{Binding Network.AlertCount}" FontSize="11" FontWeight="SemiBold"
+                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </TabItem.Header>
+                <views:NetworkView DataContext="{Binding Network}" />
             </TabItem>
             <TabItem AutomationProperties.Name="Startup">
                 <TabItem.Header>
