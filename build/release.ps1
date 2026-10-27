@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $project = Join-Path $root 'src\ThermoForge.UI\ThermoForge.UI.csproj'
 $artifacts = Join-Path $root 'artifacts'
-$publish = Join-Path $artifacts 'publish'
+$publishDir = Join-Path $artifacts 'publish'
 $sign = Join-Path $PSScriptRoot 'sign.ps1'
 
 function Invoke-Checked([string]$what, [scriptblock]$command) {
@@ -47,15 +47,15 @@ if (-not $SkipTests) {
 
 # Self-contained: users don't need to install .NET.
 Invoke-Checked 'Publish' {
-    dotnet publish $project -c Release -r win-x64 --self-contained true -p:Version=$Version -o $publish --nologo -v q
+    dotnet publish $project -c Release -r win-x64 --self-contained true -p:Version=$Version -o $publishDir --nologo -v q
 }
 
 Write-Host '==> Sign app' -ForegroundColor Cyan
-& $sign -Files (Join-Path $publish 'ThermoForge.exe'), (Join-Path $publish 'ThermoForge.Core.dll')
+& $sign -Files (Join-Path $publishDir 'ThermoForge.exe'), (Join-Path $publishDir 'ThermoForge.Core.dll')
 
 $zip = Join-Path $artifacts "ThermoForge-$Version-portable-win-x64.zip"
 Write-Host '==> Portable zip' -ForegroundColor Cyan
-Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $zip
+Compress-Archive -Path (Join-Path $publishDir '*') -DestinationPath $zip
 
 $iscc = @(
     (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
@@ -64,7 +64,7 @@ $iscc = @(
 ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $iscc) { throw 'Inno Setup 6 not found. Install it: winget install JRSoftware.InnoSetup' }
 
-$isccArgs = @("/DAppVersion=$Version", "/DSourceDir=$publish", "/DOutputDir=$artifacts", '/Q')
+$isccArgs = @("/DAppVersion=$Version", "/DSourceDir=$publishDir", "/DOutputDir=$artifacts", '/Q')
 if (($env:THERMOFORGE_SIGN_DLIB -and $env:THERMOFORGE_SIGN_METADATA) -or $env:THERMOFORGE_SIGN_THUMBPRINT -or $env:THERMOFORGE_SIGN_PFX) {
     # Inno Setup signs the installer and its uninstaller through this command ($f = file).
     $isccArgs += @('/DSign', "/Sforgesign=powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$sign`" -Files `$f")
@@ -81,11 +81,12 @@ Get-ChildItem $artifacts -File | ForEach-Object { "  {0,-45} {1,8:N1} MB" -f $_.
 
 if ($Publish) {
     $tag = "v$Version"
-    $changelog = Get-Content (Join-Path $root 'CHANGELOG.md') -Raw
-    $match = [regex]::Match($changelog, "(?ms)^## $([regex]::Escape($Version))\s*$(.+?)(?=^## |\z)")
+    $changelog = Get-Content (Join-Path $root 'CHANGELOG.md') -Raw -Encoding UTF8
+    $match = [regex]::Match($changelog, '(?ms)^## ' + [regex]::Escape($Version) + '\s*$(.+?)(?=^## |\z)')
     if (-not $match.Success) { throw "CHANGELOG.md has no '## $Version' section for the release notes." }
     $notes = Join-Path $artifacts 'release-notes.md'
-    $match.Groups[1].Value.Trim() | Set-Content $notes -Encoding utf8
+    # UTF-8 without a BOM, or GitHub shows the BOM as a stray character.
+    [IO.File]::WriteAllText($notes, $match.Groups[1].Value.Trim(), (New-Object Text.UTF8Encoding $false))
 
     $assets = Get-ChildItem $artifacts -File | Where-Object { $_.Name -ne 'release-notes.md' } | ForEach-Object FullName
     Invoke-Checked "GitHub release $tag" {

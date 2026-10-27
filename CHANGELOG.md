@@ -3,6 +3,12 @@
 `build/release.ps1 -Publish` uses the section for the version being released as the GitHub
 release notes, which ThermoForge shows when it offers the update.
 
+## 1.0.1
+
+- The Alerts tab's settings column now scrolls, so "Start with Windows" and the trusted list stay
+  reachable on smaller screens
+- First update delivered through ThermoForge's own in-app updater
+
 ## 1.0.0
 
 First public release of ThermoForge by Forge Studio.
