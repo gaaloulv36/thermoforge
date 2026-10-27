@@ -77,6 +77,16 @@
                 </StackPanel>
             </Border>
 
+            <Border DockPanel.Dock="Top" Style="{StaticResource CardBorder}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Start with Windows" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding AutoStartText}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                    <Button Content="{Binding AutoStartButtonText}" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"
+                            Command="{Binding ToggleAutoStartCommand}"
+                            ToolTip="Uses a Task Scheduler task, so Windows asks for administrator rights once, when you change it." />
+                </StackPanel>
+            </Border>
+
             <Border Style="{StaticResource CardBorder}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">

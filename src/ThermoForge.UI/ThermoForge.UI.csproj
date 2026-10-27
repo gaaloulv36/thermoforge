@@ -23,6 +23,8 @@
     <RootNamespace>ThermoForge.UI</RootNamespace>
     <ApplicationIcon>Assets\ThermoForge.ico</ApplicationIcon>
     <Product>ThermoForge</Product>
+    <!-- Release version: build/release.ps1 and the installer read it from here. -->
+    <Version>1.0.0</Version>
     <Company>Forge Studio</Company>
     <Copyright>© Forge Studio</Copyright>
   </PropertyGroup>

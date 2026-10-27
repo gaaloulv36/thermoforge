@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Windows;
+using System.Windows.Interop;
 using ThermoForge.Core.Alerts;
 using ThermoForge.Core.Processes;
 using ThermoForge.UI.Services;
@@ -13,13 +14,21 @@ public partial class MainWindow : Window
     private readonly TrayIcon _tray = new();
     private bool _exitRequested;
     private bool _monitorsStopped;
+    private bool _started;
 
     public MainWindow()
     {
         InitializeComponent();
         FitToWorkArea();
         DataContext = _viewModel;
-        Loaded += async (_, _) => await _viewModel.StartAsync();
+        Loaded += async (_, _) => await StartMonitoringAsync();
+        SourceInitialized += (_, _) =>
+        {
+            // Another launch asks this one to show itself (see SingleInstance).
+            var source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            SingleInstance.AllowShowMessage(source.Handle);
+            source.AddHook(WndProc);
+        };
 
         _tray.OpenRequested += (_, _) => ShowFromTray();
         _tray.ExitRequested += (_, _) => ExitApp();
@@ -38,6 +47,31 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(AlertsViewModel.IsPaused))
                 _tray.SetPaused(_viewModel.Alerts.IsPaused);
         };
+    }
+
+    /// <summary>Starts monitoring without showing the window (logon task, <c>--tray</c>).</summary>
+    public void StartInTray()
+    {
+        new WindowInteropHelper(this).EnsureHandle();
+        _ = StartMonitoringAsync();
+    }
+
+    private async Task StartMonitoringAsync()
+    {
+        if (_started)
+            return;
+        _started = true;
+        await _viewModel.StartAsync();
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if ((uint)message == SingleInstance.ShowMessage)
+        {
+            ShowFromTray();
+            handled = true;
+        }
+        return IntPtr.Zero;
     }
 
     /// <summary>Laptops at 125–150 % scaling have less room than the default size; never open partly off-screen.</summary>

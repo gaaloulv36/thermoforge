@@ -69,13 +69,22 @@ script-based attacks, hidden auto-start entries and programs phoning home.
 - Tray icon that turns amber (warning) or red (alert), with a live tooltip;
   closing the window keeps ThermoForge running in the tray (right-click › Exit to quit)
 
-## Requirements
+## Install
 
-- Windows 10 / 11 (x64)
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- Optional but recommended: administrator rights and the [PawnIO driver](https://pawnio.eu/)
+Download `ThermoForge-Setup-<version>.exe` from the Releases page and run it (Windows 10 1809+ / 11, x64).
+It includes the .NET runtime, so nothing else is needed. The installer can set ThermoForge to
+**start with Windows**: it then starts in the tray at sign-in **with administrator rights and no
+UAC prompt** (a Task Scheduler logon task), so every sensor and process is visible. You can switch
+this on or off later on the Alerts tab. A portable zip is also published for those who prefer no installer.
 
-## Run
+Opening ThermoForge while it's already running brings up the existing window instead of starting a second copy.
+
+Builds are not code-signed yet, so Windows SmartScreen may warn ("More info" › "Run anyway").
+
+## Build from source
+
+Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0); optional but
+recommended: administrator rights and the [PawnIO driver](https://pawnio.eu/).
 
 ```powershell
 git clone https://github.com/gaaloulv36/thermoforge.git
@@ -102,6 +111,20 @@ SHA-256) and `crash.log`. The VirusTotal key is kept in `settings.json`, encrypt
 dotnet test ThermoForge.slnx
 ```
 
+## Release
+
+```powershell
+winget install JRSoftware.InnoSetup   # once
+.\build\release.ps1
+```
+
+Runs the tests, publishes a self-contained win-x64 build, signs it if a certificate is configured
+([docs/SIGNING.md](docs/SIGNING.md)), and writes the installer, a portable zip and `SHA256SUMS.txt`
+to `artifacts\`. The version comes from `<Version>` in `src/ThermoForge.UI/ThermoForge.UI.csproj`.
+
+Command-line switches: `--tray` (start hidden in the tray; used by the logon task),
+`--autostart on|off` (create or remove the logon task; needs admin rights).
+
 ## Layout
 
 | Project | Purpose |
@@ -109,6 +132,8 @@ dotnet test ThermoForge.slnx
 | `src/ThermoForge.Core` | Sensor providers (LibreHardwareMonitor, ACPI thermal zones), process monitor (WMI), Authenticode verification, heuristics |
 | `src/ThermoForge.UI` | WPF dashboard (MVVM via CommunityToolkit.Mvvm, charts via ScottPlot) |
 | `tests/ThermoForge.Tests` | xUnit tests for Core logic |
+| `installer/` | Inno Setup script |
+| `build/` | Release and signing scripts |
 
 ## Process checks
 
@@ -160,7 +185,7 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 4. ~~Startup/persistence scanner~~ (done)
 5. ~~Network monitor~~ (done)
 6. ~~VirusTotal / Defender integration, reports~~ (done)
-7. Background Windows Service + installer
+7. ~~Start with Windows (elevated, in the tray), installer, signing pipeline~~ (done; signing needs a certificate)
 
 ## About Forge Studio
 

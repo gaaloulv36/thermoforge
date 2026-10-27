@@ -100,6 +100,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Processes.Start();
         Startup.Start();
         Security.Start();
+        _ = Alerts.RefreshAutoStartAsync();
         await Hardware.StartAsync();
     }
 
@@ -121,7 +122,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     [RelayCommand]
     private void RestartAsAdministrator()
     {
-        var startInfo = new ProcessStartInfo(Environment.ProcessPath!)
+        var startInfo = new ProcessStartInfo(Environment.ProcessPath!, App.RestartedArgument)
         {
             UseShellExecute = true,
             Verb = "runas",

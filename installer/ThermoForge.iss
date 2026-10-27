@@ -1,0 +1,82 @@
+; ThermoForge installer (Inno Setup 6). Build it with build\release.ps1, which publishes the app,
+; passes the version and output folders, and signs everything when a certificate is configured.
+
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
+#ifndef SourceDir
+  #define SourceDir "..\artifacts\publish"
+#endif
+#ifndef OutputDir
+  #define OutputDir "..\artifacts"
+#endif
+
+[Setup]
+; Never change the AppId: Windows uses it to recognise upgrades and the uninstaller.
+AppId={{312C1079-C50B-4581-8EB3-203D49286E21}
+AppName=ThermoForge
+AppVersion={#AppVersion}
+AppVerName=ThermoForge {#AppVersion}
+AppPublisher=Forge Studio
+AppPublisherURL=https://github.com/gaaloulv36/thermoforge
+AppSupportURL=https://github.com/gaaloulv36/thermoforge/issues
+AppCopyright=© Forge Studio
+VersionInfoVersion={#AppVersion}
+DefaultDirName={autopf}\Forge Studio\ThermoForge
+DisableProgramGroupPage=yes
+; Program Files and the "start with Windows" task both need admin rights.
+PrivilegesRequired=admin
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+MinVersion=10.0.17763
+OutputDir={#OutputDir}
+OutputBaseFilename=ThermoForge-Setup-{#AppVersion}
+SetupIconFile=..\src\ThermoForge.UI\Assets\ThermoForge.ico
+UninstallDisplayIcon={app}\ThermoForge.exe
+UninstallDisplayName=ThermoForge
+Compression=lzma2/max
+SolidCompression=yes
+WizardStyle=modern
+; Ask the user to close a running ThermoForge (see SingleInstance.cs) before installing or uninstalling.
+AppMutex=Local\ThermoForge.Instance
+#ifdef Sign
+SignTool=forgesign
+SignedUninstaller=yes
+#endif
+
+[Tasks]
+Name: "autostart"; Description: "Start ThermoForge with Windows (in the tray, with administrator rights for full sensor and process access)"
+Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
+
+[Files]
+Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+; Self-contained builds ship a full runtime; clear files an older version left behind.
+Type: filesandordirs; Name: "{app}\*"
+
+[Icons]
+Name: "{autoprograms}\ThermoForge"; Filename: "{app}\ThermoForge.exe"; Comment: "PC temperatures and suspicious-activity monitor"
+Name: "{autodesktop}\ThermoForge"; Filename: "{app}\ThermoForge.exe"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\ThermoForge.exe"; Parameters: "--autostart on"; Tasks: autostart; Flags: runhidden waituntilterminated; StatusMsg: "Setting ThermoForge to start with Windows..."
+Filename: "{app}\ThermoForge.exe"; Parameters: "--autostart off"; Tasks: not autostart; Flags: runhidden waituntilterminated
+Filename: "{app}\ThermoForge.exe"; Description: "Open ThermoForge now"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{app}\ThermoForge.exe"; Parameters: "--autostart off"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveAutoStart"
+
+[Code]
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  DataDir: String;
+begin
+  if CurUninstallStep <> usPostUninstall then
+    exit;
+  DataDir := ExpandConstant('{localappdata}\ThermoForge');
+  if DirExists(DataDir) and not UninstallSilent and
+     (MsgBox('Also delete your ThermoForge settings, trusted programs and scan history?' + #13#10#13#10 + DataDir,
+             mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES) then
+    DelTree(DataDir, True, True, True);
+end;
