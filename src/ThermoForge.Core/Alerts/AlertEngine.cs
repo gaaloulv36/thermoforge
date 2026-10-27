@@ -14,6 +14,9 @@ public enum AlertKind
 
     /// <summary>Antivirus problems: Defender turned off, or a threat it found.</summary>
     Security,
+
+    /// <summary>A newer ThermoForge is available.</summary>
+    Update,
 }
 
 /// <param name="Pid">The process the alert is about, for "show me" actions.</param>

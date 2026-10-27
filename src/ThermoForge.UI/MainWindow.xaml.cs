@@ -90,6 +90,7 @@ public partial class MainWindow : Window
         {
             { Pid: { } pid } => () => { ShowFromTray(); _viewModel.ShowProcess(pid); },
             { Kind: AlertKind.Startup } => () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.StartupTab; },
+            { Kind: AlertKind.Update } => ShowFromTray,
             { Kind: AlertKind.Security } => () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.SecurityTab; },
             _ => () => { ShowFromTray(); _viewModel.SelectedTab = MainViewModel.AlertsTab; },
         };

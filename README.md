@@ -79,6 +79,13 @@ this on or off later on the Alerts tab. A portable zip is also published for tho
 
 Opening ThermoForge while it's already running brings up the existing window instead of starting a second copy.
 
+**Updates:** ThermoForge checks this repository's Releases once a day (switch it off on the Alerts tab,
+or use "Check now"). When a new version is out you get a notification and a banner with
+"Update now", "What's new" and "Skip this version". Updating downloads the installer, checks it
+against the release's `SHA256SUMS.txt` (and, once builds are signed, that it's signed by the same
+publisher), then closes ThermoForge, installs silently and reopens it. Nothing is sent to GitHub
+besides the usual request for the latest release. Portable copies link to the download page instead.
+
 Builds are not code-signed yet, so Windows SmartScreen may warn ("More info" › "Run anyway").
 
 ## Build from source

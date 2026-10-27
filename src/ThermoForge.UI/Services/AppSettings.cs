@@ -26,6 +26,14 @@ public sealed class AppSettings
     /// <summary>VirusTotal API key, encrypted with DPAPI for the current Windows user; see <see cref="ApiKey"/>.</summary>
     public string? VirusTotalKeyProtected { get; set; }
 
+    /// <summary>Look for a new release on GitHub once a day.</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    public DateTime? LastUpdateCheckUtc { get; set; }
+
+    /// <summary>A release the user chose to skip; it isn't offered again (a newer one is).</summary>
+    public string? SkippedUpdateVersion { get; set; }
+
     /// <summary>The window's close button hides to the tray instead of exiting.</summary>
     public bool CloseToTray { get; set; } = true;
 

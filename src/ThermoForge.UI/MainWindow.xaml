@@ -33,8 +33,31 @@
             <TextBlock Text="Hardware temperatures, suspicious background activity and network connections" Style="{StaticResource SecondaryText}" />
         </StackPanel>
 
-        <!-- Warnings -->
+        <!-- Update and warnings -->
         <StackPanel Grid.Row="1">
+            <Border Style="{StaticResource CardBorder}" BorderBrush="{StaticResource AccentBrush}" Margin="0,0,0,8"
+                    Visibility="{Binding Update.ShowBanner, Converter={StaticResource BoolToVisibility}}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Update now" Style="{StaticResource BannerButton}" Margin="0,0,8,0"
+                                Command="{Binding Update.InstallCommand}" />
+                        <Button Content="What's new" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding Update.OpenReleaseNotesCommand}" />
+                        <Button Content="Skip this version" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding Update.SkipVersionCommand}" />
+                        <Button Content="Later" Style="{StaticResource ActionButton}"
+                                Command="{Binding Update.HideBannerCommand}" />
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Update.AvailableText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Update.StatusText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                                   Visibility="{Binding Update.IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                        <ProgressBar Height="4" Margin="0,6,0,0" Maximum="100" Value="{Binding Update.Progress}"
+                                     Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceAltBrush}" BorderThickness="0"
+                                     Visibility="{Binding Update.IsDownloading, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
             <Border Style="{StaticResource CardBorder}" Background="{StaticResource WarningBackgroundBrush}"
                     BorderBrush="{StaticResource StatusWarmBrush}" Margin="0,0,0,8"
                     Visibility="{Binding ShowAdminWarning, Converter={StaticResource BoolToVisibility}}">

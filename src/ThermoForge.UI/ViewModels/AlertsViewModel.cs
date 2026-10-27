@@ -163,6 +163,7 @@ public sealed partial class AlertsViewModel : ObservableObject
             AlertKind.Temperature => NotifyTemperature,
             AlertKind.Startup => NotifyStartup,
             AlertKind.Security => NotifySecurity,
+            AlertKind.Update => true,
             _ => true,
         };
     }

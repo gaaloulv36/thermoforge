@@ -77,6 +77,27 @@
                 </StackPanel>
             </Border>
 
+            <Border DockPanel.Dock="Top" Style="{StaticResource CardBorder}" Margin="0,0,0,14"
+                    DataContext="{Binding DataContext.Update, RelativeSource={RelativeSource AncestorType=Window}}">
+                <StackPanel>
+                    <TextBlock Text="Updates" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding CurrentVersionText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
+                               Visibility="{Binding StatusText.Length, Converter={StaticResource ToVisibility}}" />
+                    <CheckBox Content="Check for updates automatically (once a day)" IsChecked="{Binding CheckAutomatically}" Margin="0,8,0,8" />
+                    <WrapPanel>
+                        <Button Content="Check now" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding CheckNowCommand}" />
+                        <Button Content="Update now" Style="{StaticResource ActionButton}" Margin="0,0,8,0"
+                                Command="{Binding InstallCommand}"
+                                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ToVisibility}}" />
+                        <Button Content="What's new" Style="{StaticResource ActionButton}"
+                                Command="{Binding OpenReleaseNotesCommand}"
+                                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ToVisibility}}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
             <Border DockPanel.Dock="Top" Style="{StaticResource CardBorder}" Margin="0,0,0,14">
                 <StackPanel>
                     <TextBlock Text="Start with Windows" FontSize="16" FontWeight="SemiBold" />

@@ -67,6 +67,11 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         };
         Security.FilesChecked += (_, _) => Startup.RescanCommand.Execute(null);
         checker.KeyNeeded += (_, _) => SelectedTab = SecurityTab;
+        Update = new UpdateViewModel(Settings);
+        Update.UpdateFound += (_, update) => Raise([new Alert(DateTime.Now, AlertKind.Update, FindingSeverity.Low,
+            $"ThermoForge {update.Version.ToString(3)} is available",
+            "Open ThermoForge to see what's new and update with one click.")]);
+        Update.ExitForUpdate += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
     }
 
     public AppSettings Settings { get; }
@@ -75,6 +80,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
     public NetworkViewModel Network { get; } = new();
     public StartupViewModel Startup { get; }
     public SecurityViewModel Security { get; }
+    public UpdateViewModel Update { get; }
     public AlertsViewModel Alerts { get; }
 
     public bool ShowAdminWarning { get; } = !SystemEnvironment.IsAdministrator();
@@ -101,6 +107,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         Startup.Start();
         Security.Start();
         _ = Alerts.RefreshAutoStartAsync();
+        Update.Start();
         await Hardware.StartAsync();
     }
 
@@ -109,6 +116,7 @@ public sealed partial class MainViewModel : ObservableObject, IAsyncDisposable
         await Processes.DisposeAsync();
         await Startup.DisposeAsync();
         await Security.DisposeAsync();
+        Update.Dispose();
         await Hardware.DisposeAsync();
     }
 
