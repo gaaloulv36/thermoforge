@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/logo.png" width="128" alt="ThermoForge logo"></p>
 
 <h1 align="center">ThermoForge</h1>
-<p align="center"><b>PC temperatures &amp; suspicious-process monitor for Windows</b><br>by <b>Forge Studio</b></p>
+<p align="center"><b>PC temperatures &amp; suspicious-process monitor for Windows</b><br>by <b><a href="https://gaaloulv36.github.io/open-forge-studio-website/">Open Forge Studio</a></b></p>
 
 ---
 
@@ -194,8 +194,8 @@ binaries) and MSIX packages. Revocation is not checked, so no network access is 
 6. ~~VirusTotal / Defender integration, reports~~ (done)
 7. ~~Start with Windows (elevated, in the tray), installer, signing pipeline~~ (done; signing needs a certificate)
 
-## About Forge Studio
+## About Open Forge Studio
 
-ThermoForge is part of the **Forge Studio** family of desktop tools
-(ThermoForge, VaultForge, and more to come). Need a customized version for your team or
-company? Get in touch: [YOUR LINKEDIN URL]
+ThermoForge is part of **[Open Forge Studio](https://gaaloulv36.github.io/open-forge-studio-website/)**,
+a suite of privacy-first, local-first micro-apps for Windows (ThermoForge, VaultForge, and more to come).
+Need a customized version for your team or company? Get in touch through the website.

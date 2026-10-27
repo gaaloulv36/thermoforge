@@ -71,7 +71,7 @@ public static class AutoStart
     {
         var task = new XElement(Ns + "Task", new XAttribute("version", "1.2"),
             new XElement(Ns + "RegistrationInfo",
-                new XElement(Ns + "Author", "Forge Studio"),
+                new XElement(Ns + "Author", "Open Forge Studio"),
                 new XElement(Ns + "Description",
                     "Starts ThermoForge in the notification area when you sign in, with administrator rights so every sensor and process is visible."),
                 new XElement(Ns + "URI", @"\" + TaskName)),

@@ -11,31 +11,42 @@
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource WindowBackgroundBrush}"
         Foreground="{StaticResource TextPrimaryBrush}"
-        FontFamily="Segoe UI" FontSize="13">
+        FontFamily="{StaticResource SansFont}" FontSize="13">
 
-    <Grid Margin="18">
+    <Grid Margin="22,18,22,18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal">
-                <Image Source="Assets/ThermoForge.png" Width="32" Height="32" Margin="0,0,10,0" VerticalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock FontSize="22" VerticalAlignment="Center">
-                    <Run Text="Thermo" FontWeight="Medium" /><Run Text="Forge" FontWeight="Bold" Foreground="#E8463A" />
+        <!-- Header: product mark, name and studio, like the website's product page. -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <Border DockPanel.Dock="Right" Style="{StaticResource Pill}" Background="{StaticResource SuccessSoftBrush}"
+                    BorderBrush="#1F5C47" Padding="10,3" VerticalAlignment="Center"
+                    ToolTip="All checks run on this PC. Nothing is uploaded unless you ask (VirusTotal, updates).">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="6" Height="6" Fill="{StaticResource StatusNormalBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Runs locally" FontFamily="{StaticResource MonoFont}" FontSize="11" FontWeight="SemiBold"
+                               Foreground="{StaticResource StatusNormalBrush}" />
+                </StackPanel>
+            </Border>
+            <Image Source="Assets/ThermoForge.png" Width="46" Height="46" Margin="0,0,14,0" VerticalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock FontFamily="{StaticResource MonoFont}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextFaintBrush}">
+                    <Run Text="OPEN FORGE STUDIO" Foreground="{StaticResource AccentTextBrush}" /><Run Text="  /  TEMPS · PROCESSES · NETWORK" />
                 </TextBlock>
-                <TextBlock Text="by Forge Studio" Style="{StaticResource SecondaryText}" Margin="10,0,0,2" VerticalAlignment="Bottom" />
+                <TextBlock FontFamily="{StaticResource MonoFont}" FontSize="26" FontWeight="Bold" Margin="0,2,0,0">
+                    <Run Text="Thermo" /><Run Text="Forge" Foreground="{StaticResource AccentTextBrush}" />
+                </TextBlock>
             </StackPanel>
-            <TextBlock Text="Hardware temperatures, suspicious background activity and network connections" Style="{StaticResource SecondaryText}" />
-        </StackPanel>
+        </DockPanel>
 
         <!-- Update and warnings -->
         <StackPanel Grid.Row="1">
-            <Border Style="{StaticResource CardBorder}" BorderBrush="{StaticResource AccentBrush}" Margin="0,0,0,8"
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource AccentSoftBrush}"
+                    BorderBrush="{StaticResource AccentBrush}" Margin="0,0,0,10"
                     Visibility="{Binding Update.ShowBanner, Converter={StaticResource BoolToVisibility}}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
@@ -58,22 +69,22 @@
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource CardBorder}" Background="{StaticResource WarningBackgroundBrush}"
-                    BorderBrush="{StaticResource StatusWarmBrush}" Margin="0,0,0,8"
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource WarnSoftBrush}"
+                    BorderBrush="{StaticResource WarnBorderBrush}" Margin="0,0,0,10"
                     Visibility="{Binding ShowAdminWarning, Converter={StaticResource BoolToVisibility}}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Content="Restart as administrator"
-                            Style="{StaticResource BannerButton}" Command="{Binding RestartAsAdministratorCommand}" />
+                            Style="{StaticResource ActionButton}" Margin="12,0,0,0" Command="{Binding RestartAsAdministratorCommand}" />
                     <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
                                Text="Not running as administrator. CPU, motherboard and fan sensors are unavailable (showing ACPI thermal zones instead), and Windows hides the file and command line of system and elevated processes." />
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource CardBorder}" Background="{StaticResource WarningBackgroundBrush}"
-                    BorderBrush="{StaticResource StatusWarmBrush}" Margin="0,0,0,8"
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource WarnSoftBrush}"
+                    BorderBrush="{StaticResource WarnBorderBrush}" Margin="0,0,0,10"
                     Visibility="{Binding ShowPawnIoWarning, Converter={StaticResource BoolToVisibility}}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Content="Get PawnIO"
-                            Style="{StaticResource BannerButton}" Command="{Binding OpenPawnIoDownloadCommand}" />
+                            Style="{StaticResource ActionButton}" Margin="12,0,0,0" Command="{Binding OpenPawnIoDownloadCommand}" />
                     <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
                                Text="The PawnIO driver is not installed. It is required to read CPU core/package temperatures. Install it (or run: winget install namazso.PawnIO), then restart the app." />
                 </DockPanel>
@@ -86,14 +97,15 @@
             </TabItem>
             <TabItem AutomationProperties.Name="Processes">
                 <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" TextElement.FontFamily="{StaticResource MonoFont}"
+                                TextElement.FontSize="13" TextElement.FontWeight="Medium">
                         <TextBlock Text="Processes" />
-                        <Border Background="{StaticResource StatusHotBrush}" CornerRadius="9" MinWidth="18" Height="18"
-                                Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        <Border Style="{StaticResource Pill}" Background="{StaticResource DangerSoftBrush}"
+                                BorderBrush="{StaticResource DangerBorderBrush}" Margin="8,0,0,0"
                                 ToolTip="Processes with a Medium or High finding"
                                 Visibility="{Binding Processes.AlertCount, Converter={StaticResource ToVisibility}}">
                             <TextBlock Text="{Binding Processes.AlertCount}" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                       Foreground="{StaticResource StatusHotBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                 </TabItem.Header>
@@ -101,14 +113,15 @@
             </TabItem>
             <TabItem AutomationProperties.Name="Network">
                 <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" TextElement.FontFamily="{StaticResource MonoFont}"
+                                TextElement.FontSize="13" TextElement.FontWeight="Medium">
                         <TextBlock Text="Network" />
-                        <Border Background="{StaticResource StatusHotBrush}" CornerRadius="9" MinWidth="18" Height="18"
-                                Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        <Border Style="{StaticResource Pill}" Background="{StaticResource DangerSoftBrush}"
+                                BorderBrush="{StaticResource DangerBorderBrush}" Margin="8,0,0,0"
                                 ToolTip="Programs with a Medium or High network finding"
                                 Visibility="{Binding Network.AlertCount, Converter={StaticResource ToVisibility}}">
                             <TextBlock Text="{Binding Network.AlertCount}" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                       Foreground="{StaticResource StatusHotBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                 </TabItem.Header>
@@ -116,14 +129,15 @@
             </TabItem>
             <TabItem AutomationProperties.Name="Startup">
                 <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" TextElement.FontFamily="{StaticResource MonoFont}"
+                                TextElement.FontSize="13" TextElement.FontWeight="Medium">
                         <TextBlock Text="Startup" />
-                        <Border Background="{StaticResource StatusHotBrush}" CornerRadius="9" MinWidth="18" Height="18"
-                                Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        <Border Style="{StaticResource Pill}" Background="{StaticResource DangerSoftBrush}"
+                                BorderBrush="{StaticResource DangerBorderBrush}" Margin="8,0,0,0"
                                 ToolTip="Startup entries with a Medium or High finding"
                                 Visibility="{Binding Startup.AlertCount, Converter={StaticResource ToVisibility}}">
                             <TextBlock Text="{Binding Startup.AlertCount}" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                       Foreground="{StaticResource StatusHotBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                 </TabItem.Header>
@@ -131,14 +145,15 @@
             </TabItem>
             <TabItem AutomationProperties.Name="Security">
                 <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" TextElement.FontFamily="{StaticResource MonoFont}"
+                                TextElement.FontSize="13" TextElement.FontWeight="Medium">
                         <TextBlock Text="Security" />
-                        <Border Background="{StaticResource StatusHotBrush}" CornerRadius="9" MinWidth="18" Height="18"
-                                Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        <Border Style="{StaticResource Pill}" Background="{StaticResource DangerSoftBrush}"
+                                BorderBrush="{StaticResource DangerBorderBrush}" Margin="8,0,0,0"
                                 ToolTip="Antivirus problems, recent Defender detections and detected files"
                                 Visibility="{Binding Security.AlertCount, Converter={StaticResource ToVisibility}}">
                             <TextBlock Text="{Binding Security.AlertCount}" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                       Foreground="{StaticResource StatusHotBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                 </TabItem.Header>

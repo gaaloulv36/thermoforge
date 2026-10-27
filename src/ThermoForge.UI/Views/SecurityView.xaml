@@ -33,7 +33,7 @@
                                 Command="{Binding OpenWindowsSecurityCommand}" />
                     </StackPanel>
                     <StackPanel>
-                        <TextBlock Text="Microsoft Defender" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Microsoft Defender" Style="{StaticResource CardTitle}" />
                         <TextBlock Text="{Binding DefenderMode}" TextWrapping="Wrap" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding RealTimeText}" Style="{StaticResource SecondaryText}"
                                    Visibility="{Binding RealTimeText.Length, Converter={StaticResource ToVisibility}}" />
@@ -49,7 +49,7 @@
             <Border Grid.Row="2" Style="{StaticResource CardBorder}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <TextBlock Text="Detection history" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Detection history" Style="{StaticResource CardTitle}" />
                         <TextBlock Text="{Binding DetectionsText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -86,7 +86,7 @@
             <Border Grid.Row="4" Style="{StaticResource CardBorder}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <TextBlock Text="Files checked" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Files checked" Style="{StaticResource CardTitle}" />
                         <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                                    Text="Results stay attached to the exact file: if it changes, it has to be checked again. Detections count toward the risk score." />
                     </StackPanel>
@@ -124,7 +124,7 @@
         <StackPanel Grid.Column="2">
             <Border Style="{StaticResource CardBorder}">
                 <StackPanel>
-                    <TextBlock Text="VirusTotal" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="VirusTotal" Style="{StaticResource CardTitle}" />
                     <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0"
                                Text="Checks a file against 70+ antivirus engines. Only its SHA-256 fingerprint is sent, never the file, and only when you ask." />
                     <TextBlock Text="{Binding KeyStatusText}" TextWrapping="Wrap" Margin="0,10,0,6" />
@@ -157,7 +157,7 @@
 
             <Border Style="{StaticResource CardBorder}" Margin="0,14,0,0">
                 <StackPanel>
-                    <TextBlock Text="Report" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="Report" Style="{StaticResource CardTitle}" />
                     <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,2,0,0"
                                Text="A snapshot of this PC: verdict, flagged processes, startup entries and connections, temperatures, Defender status, file checks and recent alerts. The HTML version opens in any browser and prints cleanly." />
                     <WrapPanel Margin="0,10,0,0">

@@ -28,6 +28,7 @@ public partial class MainWindow : Window
             var source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
             SingleInstance.AllowShowMessage(source.Handle);
             source.AddHook(WndProc);
+            DarkTitleBar.Apply(source.Handle);
         };
 
         _tray.OpenRequested += (_, _) => ShowFromTray();

@@ -17,12 +17,12 @@ AppId={{312C1079-C50B-4581-8EB3-203D49286E21}
 AppName=ThermoForge
 AppVersion={#AppVersion}
 AppVerName=ThermoForge {#AppVersion}
-AppPublisher=Forge Studio
-AppPublisherURL=https://github.com/gaaloulv36/thermoforge
+AppPublisher=Open Forge Studio
+AppPublisherURL=https://gaaloulv36.github.io/open-forge-studio-website/
 AppSupportURL=https://github.com/gaaloulv36/thermoforge/issues
-AppCopyright=© Forge Studio
+AppCopyright=© Open Forge Studio
 VersionInfoVersion={#AppVersion}
-DefaultDirName={autopf}\Forge Studio\ThermoForge
+DefaultDirName={autopf}\Open Forge Studio\ThermoForge
 DisableProgramGroupPage=yes
 ; Program Files and the "start with Windows" task both need admin rights.
 PrivilegesRequired=admin

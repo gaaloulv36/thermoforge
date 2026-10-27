@@ -11,7 +11,7 @@
         <!-- Details pane for the selected connection. -->
         <DataTemplate DataType="{x:Type vm:ConnectionRowViewModel}">
             <StackPanel>
-                <TextBlock Text="{Binding ProcessText}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                <TextBlock Text="{Binding ProcessText}" FontFamily="{StaticResource MonoFont}" FontSize="19" FontWeight="Bold" TextWrapping="Wrap"
                            Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
                 <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap">
                     <Run Text="{Binding ProtocolText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DirectionText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding StateText, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding FirstSeenText, Mode=OneWay}" />

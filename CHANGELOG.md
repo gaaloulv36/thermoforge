@@ -3,6 +3,18 @@
 `build/release.ps1 -Publish` uses the section for the version being released as the GitHub
 release notes, which ThermoForge shows when it offers the update.
 
+## 1.1.0
+
+- **New brand: Open Forge Studio.** ThermoForge now matches the studio website: obsidian and slate
+  surfaces, security-cyan accents, Plus Jakarta Sans and JetBrains Mono, pill buttons and
+  monospace labels
+- **Calmer tray icon:** it no longer turns red; the normal ThermoForge icon gets a small amber
+  (warning) or rose (alert) dot instead
+- New app icon (the orange ThermoForge thermometer from the website), dark title bar, checkboxes,
+  scrollbars and tooltips, soft status pills instead of red badges
+- Installer, report and "Start with Windows" task now say Open Forge Studio; new installs go to
+  Program Files\Open Forge Studio\ThermoForge (existing installs stay where they are)
+
 ## 1.0.1
 
 - The Alerts tab's settings column now scrolls, so "Start with Windows" and the trusted list stay

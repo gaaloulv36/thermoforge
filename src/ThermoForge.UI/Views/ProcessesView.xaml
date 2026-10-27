@@ -11,7 +11,7 @@
         <!-- Details pane for the selected process. -->
         <DataTemplate DataType="{x:Type vm:ProcessRowViewModel}">
             <StackPanel>
-                <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                <TextBlock Text="{Binding Name}" FontFamily="{StaticResource MonoFont}" FontSize="19" FontWeight="Bold" TextWrapping="Wrap"
                            Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
                 <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                            Visibility="{Binding Description.Length, Converter={StaticResource ToVisibility}}" />

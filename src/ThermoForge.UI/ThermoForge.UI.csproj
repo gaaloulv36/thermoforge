@@ -24,9 +24,9 @@
     <ApplicationIcon>Assets\ThermoForge.ico</ApplicationIcon>
     <Product>ThermoForge</Product>
     <!-- Release version: build/release.ps1 and the installer read it from here. -->
-    <Version>1.0.1</Version>
-    <Company>Forge Studio</Company>
-    <Copyright>© Forge Studio</Copyright>
+    <Version>1.1.0</Version>
+    <Company>Open Forge Studio</Company>
+    <Copyright>© Open Forge Studio</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +34,8 @@
     <Resource Include="Assets\ThermoForge.png" />
     <Resource Include="Assets\TrayWarning.ico" />
     <Resource Include="Assets\TrayAlert.ico" />
+    <!-- Brand fonts (SIL Open Font License, see Assets\Fonts\OFL-*.txt). -->
+    <Resource Include="Assets\Fonts\*.ttf" />
   </ItemGroup>
 
   <ItemGroup>

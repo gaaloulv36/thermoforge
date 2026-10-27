@@ -28,7 +28,7 @@
                         <Button Content="Clear" Style="{StaticResource ActionButton}" Command="{Binding ClearCommand}" />
                     </StackPanel>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Alert history" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Alert history" Style="{StaticResource CardTitle}" />
                         <TextBlock Text="{Binding PauseText}" Style="{StaticResource SecondaryText}" />
                     </StackPanel>
                 </DockPanel>
@@ -67,7 +67,7 @@
         <StackPanel>
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="Notifications" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10" />
+                    <TextBlock Text="Notifications" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
                     <CheckBox Content="Risky processes (Medium and High)" IsChecked="{Binding NotifyProcesses}" Margin="0,0,0,8" />
                     <CheckBox Content="Components staying too hot" IsChecked="{Binding NotifyTemperature}" Margin="0,0,0,8" />
                     <CheckBox Content="New programs set to start with Windows" IsChecked="{Binding NotifyStartup}" Margin="0,0,0,8" />
@@ -81,7 +81,7 @@
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,14"
                     DataContext="{Binding DataContext.Update, RelativeSource={RelativeSource AncestorType=Window}}">
                 <StackPanel>
-                    <TextBlock Text="Updates" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="Updates" Style="{StaticResource CardTitle}" />
                     <TextBlock Text="{Binding CurrentVersionText}" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding StatusText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                                Visibility="{Binding StatusText.Length, Converter={StaticResource ToVisibility}}" />
@@ -101,7 +101,7 @@
 
             <Border Style="{StaticResource CardBorder}" Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="Start with Windows" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="Start with Windows" Style="{StaticResource CardTitle}" />
                     <TextBlock Text="{Binding AutoStartText}" TextWrapping="Wrap" Margin="0,4,0,8" />
                     <Button Content="{Binding AutoStartButtonText}" Style="{StaticResource ActionButton}" HorizontalAlignment="Left"
                             Command="{Binding ToggleAutoStartCommand}"
@@ -112,7 +112,7 @@
             <Border Style="{StaticResource CardBorder}">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                        <TextBlock Text="Trusted programs" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="Trusted programs" Style="{StaticResource CardTitle}" />
                         <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap"
                                    Text="Their findings don't count. If a file changes, it is checked again." />
                     </StackPanel>

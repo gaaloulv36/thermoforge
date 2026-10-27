@@ -1,4 +1,4 @@
-<UserControl x:Class="ThermoForge.UI.Views.StartupView"
+﻿<UserControl x:Class="ThermoForge.UI.Views.StartupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,7 +11,7 @@
         <!-- Details pane for the selected entry. -->
         <DataTemplate DataType="{x:Type vm:StartupRowViewModel}">
             <StackPanel>
-                <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"
+                <TextBlock Text="{Binding Name}" FontFamily="{StaticResource MonoFont}" FontSize="19" FontWeight="Bold" TextWrapping="Wrap"
                            Foreground="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
                 <TextBlock Style="{StaticResource SecondaryText}" TextWrapping="Wrap">
                     <Run Text="{Binding Kind, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding StateText, Mode=OneWay}" />
@@ -20,7 +20,7 @@
                            Visibility="{Binding Description.Length, Converter={StaticResource ToVisibility}}" />
                 <Border Background="{StaticResource StatusWarmBrush}" CornerRadius="4" Padding="6,1" Margin="0,6,0,0"
                         HorizontalAlignment="Left" Visibility="{Binding IsNew, Converter={StaticResource ToVisibility}}">
-                    <TextBlock Text="{Binding FirstSeenText}" Foreground="#111418" FontWeight="SemiBold" FontSize="12" />
+                    <TextBlock Text="{Binding FirstSeenText}" Foreground="{StaticResource WindowBackgroundBrush}" FontWeight="SemiBold" FontSize="12" />
                 </Border>
                 <TextBlock Text="{Binding SignatureText}" Margin="0,6,0,0" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding RiskText}" Margin="0,4,0,0" TextWrapping="Wrap" FontWeight="SemiBold"
@@ -118,7 +118,7 @@
                                     <StackPanel Orientation="Horizontal">
                                         <Border Background="{StaticResource StatusWarmBrush}" CornerRadius="3" Padding="4,0" Margin="0,0,6,0"
                                                 VerticalAlignment="Center" Visibility="{Binding IsNew, Converter={StaticResource ToVisibility}}">
-                                            <TextBlock Text="NEW" FontSize="10" FontWeight="Bold" Foreground="#111418" />
+                                            <TextBlock Text="NEW" FontSize="10" FontWeight="Bold" Foreground="{StaticResource WindowBackgroundBrush}" />
                                         </Border>
                                         <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>

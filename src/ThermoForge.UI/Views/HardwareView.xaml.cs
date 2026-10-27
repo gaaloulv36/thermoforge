@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using ScottPlot;
 using ThermoForge.Core.Models;
@@ -8,6 +8,10 @@ namespace ThermoForge.UI.Views;
 
 public partial class HardwareView : UserControl
 {
+    /// <summary>Open Forge Studio's product tones, so the chart matches the rest of the brand.</summary>
+    private static readonly string[] SeriesColors =
+        ["#22D3EE", "#F97316", "#34D399", "#A78BFA", "#FBBF24", "#FB7185", "#7DD3FC", "#F472B6"];
+
     private HardwareViewModel? _viewModel;
 
     public HardwareView()
@@ -32,13 +36,13 @@ public partial class HardwareView : UserControl
     private void StyleChart()
     {
         var plot = TemperatureChart.Plot;
-        plot.FigureBackground.Color = Color.FromHex("#1A1E24");
-        plot.DataBackground.Color = Color.FromHex("#1A1E24");
-        plot.Axes.Color(Color.FromHex("#8B95A3"));
-        plot.Grid.MajorLineColor = Color.FromHex("#2B313A");
-        plot.Legend.BackgroundColor = Color.FromHex("#20252C");
-        plot.Legend.FontColor = Color.FromHex("#E6EAF0");
-        plot.Legend.OutlineColor = Color.FromHex("#2B313A");
+        plot.FigureBackground.Color = Color.FromHex("#121A2B");
+        plot.DataBackground.Color = Color.FromHex("#121A2B");
+        plot.Axes.Color(Color.FromHex("#94A3B8"));
+        plot.Grid.MajorLineColor = Color.FromHex("#1E293B");
+        plot.Legend.BackgroundColor = Color.FromHex("#0F1626");
+        plot.Legend.FontColor = Color.FromHex("#F8FAFC");
+        plot.Legend.OutlineColor = Color.FromHex("#1E293B");
         plot.Axes.DateTimeTicksBottom();
         plot.YLabel("°C");
         plot.ShowLegend(Alignment.UpperLeft);
@@ -53,6 +57,7 @@ public partial class HardwareView : UserControl
         var plot = TemperatureChart.Plot;
         plot.Clear();
 
+        var index = 0;
         foreach (var row in _viewModel.Sensors.Where(r => r.IsCharted))
         {
             var (times, values) = _viewModel.History.GetSeries(row.Id);
@@ -62,6 +67,7 @@ public partial class HardwareView : UserControl
             var xs = times.Select(t => t.ToOADate()).ToArray();
             var line = plot.Add.Scatter(xs, values);
             line.LegendText = $"{row.Hardware} · {row.Name}";
+            line.Color = Color.FromHex(SeriesColors[index++ % SeriesColors.Length]);
             line.MarkerSize = 0;
             line.LineWidth = 2;
         }
